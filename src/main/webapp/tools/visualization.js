@@ -34,10 +34,15 @@ function fetchHttp(url, req, callback){
     }
 
     if(response.headers && response.headers.get('Content-Type') && response.headers.get('Content-Type').startsWith('application/json')){
-      console.log('Fetch success and callback');
+      console.log('Fetch success and callback: ' + url);
       return response.json();
     }
   }).then((response) => {
+    if (!$.isEmptyObject(response.error)) {
+      response.rspCode=9999;
+      response.rspMsg=response.error;
+    }
+
     callback(response);
   });
 }
@@ -52,16 +57,16 @@ function authCallback(){
 }
 
 function saveData(data, fileName) {
-    var a = document.createElement("a");
-    document.body.appendChild(a);
-    a.style = "display: none";
+    var tempLinkForSaving = document.createElement("a");
+    document.body.appendChild(tempLinkForSaving);
+    tempLinkForSaving.style = "display: none";
 
     var json = JSON.stringify(data),
         blob = new Blob([data], {type: "text/plain;charset=utf-8"}),
         url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = fileName;
-    a.click();
+    tempLinkForSaving.href = url;
+    tempLinkForSaving.download = fileName;
+    tempLinkForSaving.click();
     window.URL.revokeObjectURL(url);
 }
 
@@ -87,17 +92,61 @@ function sp(id){
   $("#page-"+id).show();
 }
 
+function splitString2Array(s, separator){
+  if ($.isEmptyObject(separator)) {
+    separator=",";
+  }
+
+  var rst=[];
+  if($.isEmptyObject(s) || s.trim().length===0){
+    return rst;
+  }
+
+  var items=s.split(separator);
+  for(var i=0;i<items.length;i++){
+    var item=items[i];
+    if (!$.isEmptyObject(item) && item.trim().length>0) {
+      rst.push(item.trim());
+    }
+  }
+
+  return rst;
+}
+
+function urlComparator(url1, url2){
+    if(!url1 || !url2 || typeof url1!=="string" || typeof url2!=="string"){
+        return 0;
+    }
+    return url1.localeCompare(url2, "en", {sensitivity: "base"});
+}
+
+function getBrowserNameAndVersion(){
+  var ua = navigator.userAgent, tem, M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+  if(/trident/i.test(M[1])){
+      tem =  /\brv[ :]+(\d+)/g.exec(ua) || [];
+      return 'IE '+(tem[1] || '');
+  }
+  if(M[1] === 'Chrome'){
+      tem= ua.match(/\b(OPR|Edge)\/(\d+)/);
+      if(tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera');
+  }
+  M = M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+  if((tem = ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+
+  return M;
+}
+
 function formatDataForTreeGrid(listObj){
   for(var i=0;i<listObj.length;i++){
-    var e=listObj[i];
-    e.title=e.url;
-    if (e.outlinks.length>0) {
-      e.lazy=true;
+    var elementOfList=listObj[i];
+    elementOfList.title=e.url;
+    if (elementOfList.outlinks.length>0) {
+      elementOfList.lazy=true;
     }else{
-      e.lazy=false;
+      elementOfList.lazy=false;
     }
-    delete e["children"];
-    delete e["outlinks"];
+    delete elementOfList["children"];
+    delete elementOfList["outlinks"];
     //addTitleForTreeGrid(e.children);
   }
   return listObj;
@@ -129,6 +178,35 @@ function formatContentLengthAg(params){
     return formatContentLength(params.value);
 }
 
+function copyToClipboard(textToCopy) {
+    // Navigator clipboard api needs a secure context (https)
+    // Use the 'out of viewport hidden text area' trick
+    const textArea = document.createElement("textarea");
+    textArea.value = textToCopy;
+
+    // Move textarea out of the viewport so it's not visible
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+
+    document.body.prepend(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        document.execCommand('copy');
+    } catch (error) {
+        console.error(error);
+    } finally {
+        textArea.remove();
+    }
+}
+
+function copyUrlToClipboard(data){
+  if(!$.isEmptyObject(data) && !$.isEmptyObject(data.url)){
+    // navigator.clipboard.writeText(data.url);
+    copyToClipboard(data.url);
+  }
+}
 
 function contextMenuCallback(key, data, source, target){
   var keyItems=key.split('-');
@@ -143,12 +221,16 @@ function contextMenuCallback(key, data, source, target){
     dataset=source.getAllNodes();
   }
 
-  if(action==='hoppath'){
+  if(action==='copyUrl'){
+    copyUrlToClipboard(data);
+  }else if(action==='outlinks'){
+    gPopupModifyHarvest.showOutlinks(data);
+  }else if(action==='hoppath'){
     visHopPath.draw(data.id);
   }else if(action==='import'){
     target.showImport(data);
   }else if(action==='prune' || action==='recrawl'){
-    target.modify(dataset, action);
+    target.modify_recursively(source, dataset, action);
   }else if(action==='browse'){
     browseUrl(data, scope);
   }else if(action==='download'){
@@ -158,9 +240,9 @@ function contextMenuCallback(key, data, source, target){
   }else if(action==='clear'){
     source.clear(dataset);
   }else if(action==='exportInspect'){
-    target.exportData(dataset);
+    target.exportData(source, dataset);
   }else if(action==='exportToBeModified'){
-    target.exportData(dataset);
+    target.exportData(source, dataset);
   }else if(action==='edit'){
     target.editImport(data);
   }else if(action==='copy'){
@@ -168,21 +250,42 @@ function contextMenuCallback(key, data, source, target){
   }
 }
 
+function disableFolderUrlMenuItems(key, opt){
+    var containerName=splitString2Array(opt.selector, " ")[0];
+    var view=popupModifyViews[containerName];
+
+    if ($.isEmptyObject(view)) {return false}
+
+    var data={};
+    if (view.isTree) {
+      var treeNodeKey=$(this).attr('key');
+      var treeNode=$.ui.fancytree.getTree(containerName).getNodeByKey(treeNodeKey);
+      data=treeNode.data;
+    }else{
+      var rowIndex=$(this).attr('row-index');
+      data=view.getRowByIndex(rowIndex);
+    }
+    
+    if (data.id!==-1) {return false};
+
+    return true;
+}
 
 var itemsPruneHarvest={
-    "prune-current": {"name": "Current"},
+    "prune-current": {"name": "Current", disabled: disableFolderUrlMenuItems},
     "prune-selected": {"name": "Selected"}
 };
 
 var itemsRecrawlHarvest={
-    "recrawl-current": {"name": "Current"},
+    "recrawl-current": {"name": "Current", disabled: disableFolderUrlMenuItems},
     "recrawl-selected": {"name": "Selected"}
 };
 
 var itemsBrowse={ 
   "browse-local": {name: "WCT Browse", icon: "far fa-dot-circle"},
   "browse-livesite": {name: "Live Site Browse", icon: "far fa-dot-circle"},
-  "browse-openwayback": {name: "OpenWayback Browse", icon: "far fa-dot-circle"},
+  "browse-accesstool": {name: "Access Tool Browse", icon: "far fa-dot-circle"},
+  "browse-archive": {name: "Archive Browse", icon: "far fa-dot-circle"},
 };
 
 var itemsExportLinks={
@@ -197,23 +300,26 @@ var itemsUndo={
 };
 
 var contextMenuItemsUrlBasic={
-  "hoppath-current": {name: "HopPath Current", icon: "fas fa-link"},
+  "copyUrl-current": {name: "Copy URL", icon: "far fa-clone"},
   "sep1": "---------",
-//  "pruneHarvest": {name: "Prune", icon: "far fa-times-circle", items: itemsPruneHarvest},
-//  "recrawlHarvest": {name: "Recrawl", icon: "fas fa-redo", items: itemsRecrawlHarvest},
-//  "import-current": {name: "Import From File", icon: "fas fa-file-import"},
-//  "sep2": "---------",
-  "browse": {name: "Browse", icon: "fab fa-internet-explorer text-primary", items: itemsBrowse},
-  "download": {name: "Download", icon: "fas fa-download text-warning"},
-//  "sep3": "---------",
-//  "exportLinks": {name: "Export Data", icon: "fas fa-file-export", items: {
-//      "exportInspect-selected": {"name": "Selected"},
-//      "exportInspect-all": {"name": "All"}
-//  }},
+  "hoppath-current": {name: "Show HopPath", icon: "fas fa-link", disabled: disableFolderUrlMenuItems},
+  "outlinks-current": {name: "Show Outlinks", icon: "fas fa-share-alt", disabled: disableFolderUrlMenuItems},
+  "sep2": "---------",
+  "pruneHarvest": {name: "Prune", icon: "far fa-times-circle", items: itemsPruneHarvest},
+  "recrawlHarvest": {name: "Recrawl", icon: "fas fa-redo", items: itemsRecrawlHarvest},
+  "import-current": {name: "Import From File", icon: "fas fa-file-import"},
+  "sep3": "---------",
+  "browse": {name: "Browse", icon: "fab fa-internet-explorer text-primary", items: itemsBrowse, disabled: disableFolderUrlMenuItems},
+  "download": {name: "Download", icon: "fas fa-download text-warning", disabled: disableFolderUrlMenuItems},
+  "sep4": "---------",
+  "exportLinks": {name: "Export Data", icon: "fas fa-file-export", items: {
+      "exportInspect-selected": {"name": "Selected"},
+      "exportInspect-all": {"name": "All"}
+  }},
 };
 
-var contextMenuItemsUrlGrid=JSON.parse(JSON.stringify(contextMenuItemsUrlBasic));
-var contextMenuItemsUrlTree=JSON.parse(JSON.stringify(contextMenuItemsUrlBasic));
+var contextMenuItemsUrlGrid=Object.assign({},contextMenuItemsUrlBasic); // JSON.parse(JSON.stringify(contextMenuItemsUrlBasic));
+var contextMenuItemsUrlTree=Object.assign({},contextMenuItemsUrlBasic); //JSON.parse(JSON.stringify(contextMenuItemsUrlBasic));
 
 var contextMenuItemsFolderTree={
   "pruneFolder": {name: "Prune Folder", icon: "far fa-times-circle"},
@@ -221,13 +327,16 @@ var contextMenuItemsFolderTree={
 };
 
 var contextMenuItemsToBeModified={
-    "hoppath-current": {name: "HopPath", icon: "fas fa-link"},
+    "copyUrl-current": {name: "Copy URL", icon: "far fa-clone"},
     "sep1": "---------",
-    "undo": {name: "Undo", icon: "fas fa-undo", items: itemsUndo},
+    "hoppath-current": {name: "Show HopPath", icon: "fas fa-link"},
+    "outlinks-current": {name: "Show Outlinks", icon: "fas fa-share-alt"},
     "sep2": "---------",
+    "undo": {name: "Undo", icon: "fas fa-undo", items: itemsUndo},
+    "sep3": "---------",
     "browse": {name: "Browse", icon: "fab fa-internet-explorer text-primary", items: itemsBrowse},
     "download": {name: "Download", icon: "fas fa-download text-warning"},
-    "sep3": "---------",
+    "sep4": "---------",
     "exportLinks": {name: "Export Data", icon: "fas fa-file-export", items: {
         "exportToBeModified-selected": {"name": "Selected"},
         "exportToBeModified-all": {"name": "All"}
@@ -238,18 +347,18 @@ function isSuccessNode(statusCode){
   return statusCode >= 200 && statusCode < 400;
 }
 
-function formatModifyHavestGridRow(params){
+function formatModifyHarvestGridRow(params){
   if(!params.data.flag){
     return 'grid-row-normal';
   }
-  var flag=params.data.flag.toUpperCase();
-  if (flag==='PRUNE') {
+  var flagOfOperationType=params.data.flag.toUpperCase();
+  if (flagOfOperationType==='PRUNE') {
     return 'grid-row-delete';
-  }else if (flag==='RECRAWL') {
+  }else if (flagOfOperationType==='RECRAWL') {
     return 'grid-row-recrawl';
-  }else if (flag==='FILE') {
+  }else if (flagOfOperationType==='FILE') {
     return 'grid-row-file';
-  }else if (flag==='NEW') {
+  }else if (flagOfOperationType==='NEW') {
     return 'grid-row-new';
   }
 
@@ -284,7 +393,7 @@ var gridOptionsCandidate={
           if(row.data.seedType===1){
             return '<span class="right badge badge-warning">S</span>&nbsp;' + row.data.url;
           }
-      }},
+      }, comparator: urlComparator},
       {headerName: "Type", field: "contentType", width: 200, filter: true},
       {headerName: "Status", field: "statusCode", width: 100, filter: 'agNumberColumnFilter'},
       {headerName: "Size", field: "contentLength", width: 100, filter: 'agNumberColumnFilter', valueFormatter: formatContentLengthAg},
@@ -297,7 +406,7 @@ var gridOptionsCandidate={
     ]},
   ],
   // rowClassRules: gridRowClassRules,
-  getRowClass: formatModifyHavestGridRow
+  getRowClass: formatModifyHarvestGridRow
 };
 
 function getGridOption(params){
@@ -383,7 +492,7 @@ var gridOptionsImportPrepare={
   columnDefs: [
     {headerName: "Normal", children:[
       {headerName: "Option", field: "option", width:80, cellRenderer: cellRendererOption},
-      {headerName: "Target", field: "url", width: 600, cellRenderer: cellRendererTarget},
+      {headerName: "Target", field: "url", width: 600, cellRenderer: cellRendererTarget, comparator: urlComparator},
       {headerName: "File", field: "uploadFileName", width: 200, cellRenderer: cellRendererFile},
       {headerName: "Modified Mode", field: "modifiedMode", width: 150, cellRenderer: cellRendererModifiedMode},
       {headerName: "ModifyDate", field: "lastModified", width: 160, cellRenderer: cellRendererModifiedDate},
@@ -425,7 +534,7 @@ var gridOptionsToBeModified={
     ]},
     {headerName: "Normal", children:[
       {headerName: "Option", field: "option", width:80, cellRenderer: cellRendererOption},
-      {headerName: "Target", field: "url", width: 800, cellRenderer: cellRendererTarget},
+      {headerName: "Target", field: "url", width: 800, cellRenderer: cellRendererTarget, comparator: urlComparator},
       {headerName: "File", field: "uploadFileName", width: 200, cellRenderer: cellRendererFile},
       {headerName: "Modified Mode", field: "modifiedMode", width: 150, cellRenderer:  cellRendererModifiedMode},
       {headerName: "ModifyDate", field: "lastModified", width: 160, cellRenderer:  cellRendererModifiedDate},
@@ -443,7 +552,7 @@ var gridOptionsToBeModified={
     //   {headerName: "Result", field: "respMsg", width: 200, pinned: "right", cellRenderer:  cellRendererRespMsg},
     // ]},
   ],
-  getRowClass: formatModifyHavestGridRow
+  getRowClass: formatModifyHarvestGridRow
 };
 
 var gridOptionsToBeModifiedVerified={
@@ -462,7 +571,7 @@ var gridOptionsToBeModifiedVerified={
     // {headerName: "", width:45, pinned: "left", headerCheckboxSelection: true, headerCheckboxSelectionFilteredOnly: true, checkboxSelection: true},
     {headerName: "Normal", children:[
       {headerName: "Option", field: "option", width:80, cellRenderer: cellRendererOption},
-      {headerName: "Target", field: "url", width: 800, cellRenderer: cellRendererTarget},
+      {headerName: "Target", field: "url", width: 800, cellRenderer: cellRendererTarget, comparator: urlComparator},
       {headerName: "File", field: "uploadFileName", width: 200, cellRenderer: cellRendererFile},
       {headerName: "Modified Mode", field: "modifiedMode", width: 150, cellRenderer:  cellRendererModifiedMode},
       {headerName: "ModifyDate", field: "lastModified", width: 160, cellRenderer:  cellRendererModifiedDate},
@@ -566,4 +675,17 @@ function g_TurnOffOverlayLoading(){
   if (overlayLoadingReferedNumber === 0) {
     $('#main-tab-group .overlay').hide();
   }
+}
+
+function disablePatchHarvestButton(){
+    $("#btn-patch-harvest").attr('disabled','disabled');
+    $("#btn-patch-harvest-dropdown").attr('disabled','disabled');
+    $("#icon-patch-harvest-loading").show();
+    $("#text-patch-harvest-button").html("Loading ...");
+}
+function enablePatchHarvestButton(){
+    $("#btn-patch-harvest").removeAttr('disabled');
+    $("#btn-patch-harvest-dropdown").removeAttr('disabled');
+    $("#icon-patch-harvest-loading").hide();
+    $("#text-patch-harvest-button").html('<i class="fas fa-shopping-cart"> Patch Harvest </i>');
 }

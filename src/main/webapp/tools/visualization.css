@@ -319,6 +319,8 @@ div#tree {
 	font-weight: bold;
 }
 
+
+
 #popup-modify-harvest-apply-btn-group{
 
 }
@@ -346,8 +348,4 @@ div#tree {
 
 #btn-group-modification button{
 	width: 150px;
-}
-
-.control-sidebar{
-    height: calc(100vh - 55px);
 }
