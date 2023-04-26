@@ -27,7 +27,7 @@ import org.webcurator.core.visualization.networkmap.service.NetworkMapClient;
 import org.webcurator.core.store.*;
 import org.webcurator.core.util.ApplicationContextFactory;
 import org.webcurator.domain.model.core.HarvestResult;
-
+import org.webcurator.visualization.app.WavaDirectoryManagement;
 import javax.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -148,7 +148,7 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationDirectoryManager visualizationDirectoryManager() {
-        return new VisualizationDirectoryManager(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
+        return new WavaDirectoryManagement(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
     }
 
     @Bean
@@ -246,7 +246,7 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public BDBNetworkMapPool bdbDatabasePool() {
-        BDBNetworkMapPool pool = new BDBNetworkMapPool(arcDigitalAssetStoreServiceBaseDir, visualizationDbVersion);
+        BDBNetworkMapPool pool = new BDBNetworkMapPool(visualizationDirectoryManager(), visualizationDbVersion);
         return pool;
     }
 

@@ -11,7 +11,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
-public class VisualizationServiceController {
+public class VisServiceController {
     // The base directory for the arc store
     @Value("${arcDigitalAssetStoreService.baseDir}")
     private String arcDigitalAssetStoreServiceBaseDir;
