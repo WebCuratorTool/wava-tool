@@ -4,10 +4,7 @@ import org.webcurator.core.util.PatchUtil;
 import org.webcurator.core.visualization.VisualizationDirectoryManager;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 
 public class WavaDirectoryManagement extends VisualizationDirectoryManager {
@@ -17,12 +14,39 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
 
     public WavaDirectoryManagement(String baseDir, String baseLogDir, String baseReportDir) {
         super(baseDir, baseLogDir, baseReportDir);
-        this.baseWarcFolderNode = treeHarvestResults(new File(baseDir));
+    }
+
+    @Override
+    public String getSubHarvestResultFolder(long job, int harvestResultNumber) {
+        FolderNode node = mapWarcFolders.get(job);
+        if (node == null) {
+            return job + File.separator + harvestResultNumber;
+        }
+        String fullPath = node.getAbsolutePath();
+        return fullPath.substring(this.getBaseDir().length());
+    }
+
+    @Override
+    public String getDbName(long job, int harvestResultNumber) {
+        FolderNode node = mapWarcFolders.get(job);
+        if (node == null) {
+            return job + "-" + harvestResultNumber;
+        }
+        return node.getAbsolutePath();
+    }
+
+    public FolderNode treeHarvestResults() {
+        this.mapWarcFolders.clear();
+        this.baseWarcFolderNode = null;
+
+        this.baseWarcFolderNode = treeHarvestResults(new File(this.getBaseDir()));
         if (this.baseWarcFolderNode == null) {
             this.baseWarcFolderNode = new FolderNode();
             this.baseWarcFolderNode.setChildren(new ArrayList<>());
         }
-        this.baseWarcFolderNode.setName(baseDir);
+        this.baseWarcFolderNode.setTitle(this.getBaseDir());
+
+        return this.baseWarcFolderNode;
     }
 
     public FolderNode treeHarvestResults(File rootPath) {
@@ -32,8 +56,8 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         List<File> warcFiles = PatchUtil.listWarcFiles(rootPath);
         if (warcFiles.size() > 0) {
             FolderNode node = new FolderNode();
-            node.setName(rootPath.getName());
-            node.setLeafNode(true);
+            node.setTitle("Harvest Result: " + rootPath.getName());
+            node.setFolder(false);
             node.setAbsolutePath(rootPath.getAbsolutePath());
             long tiId = this.tiId++;
             node.setTiId(tiId);
@@ -46,6 +70,12 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         if (files == null) {
             return null;
         }
+        Arrays.sort(files, new Comparator<File>() {
+            @Override
+            public int compare(File f0, File f1) {
+                return f0.getName().compareTo(f1.getName());
+            }
+        });
         List<FolderNode> children = new ArrayList<>();
         for (File f : files) {
             if (!f.isDirectory()) {
@@ -58,69 +88,70 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         }
         if (!children.isEmpty()) {
             FolderNode node = new FolderNode();
-            node.setName(rootPath.getName());
-            node.setLeafNode(false);
+            node.setTitle(rootPath.getName());
+            node.setFolder(true);
             node.setChildren(children);
             return node;
         }
         return null;
     }
 
-}
 
-class FolderNode {
-    private String name;
-    private String absolutePath;
-    private long tiId;
-    private int hrNum;
-    private boolean isLeafNode;
-    private List<FolderNode> children;
+    static class FolderNode {
+        private String title;
+        private String absolutePath;
+        private long tiId;
+        private int hrNum;
+        private boolean folder = true;
+        private List<FolderNode> children;
 
-    public String getName() {
-        return name;
-    }
+        public String getTitle() {
+            return title;
+        }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+        public void setTitle(String title) {
+            this.title = title;
+        }
 
-    public String getAbsolutePath() {
-        return absolutePath;
-    }
+        public String getAbsolutePath() {
+            return absolutePath;
+        }
 
-    public void setAbsolutePath(String absolutePath) {
-        this.absolutePath = absolutePath;
-    }
+        public void setAbsolutePath(String absolutePath) {
+            this.absolutePath = absolutePath;
+        }
 
-    public long getTiId() {
-        return tiId;
-    }
+        public long getTiId() {
+            return tiId;
+        }
 
-    public void setTiId(long tiId) {
-        this.tiId = tiId;
-    }
+        public void setTiId(long tiId) {
+            this.tiId = tiId;
+        }
 
-    public int getHrNum() {
-        return hrNum;
-    }
+        public int getHrNum() {
+            return hrNum;
+        }
 
-    public void setHrNum(int hrNum) {
-        this.hrNum = hrNum;
-    }
+        public void setHrNum(int hrNum) {
+            this.hrNum = hrNum;
+        }
 
-    public boolean isLeafNode() {
-        return isLeafNode;
-    }
+        public boolean isFolder() {
+            return folder;
+        }
 
-    public void setLeafNode(boolean leafNode) {
-        isLeafNode = leafNode;
-    }
+        public void setFolder(boolean folder) {
+            this.folder = folder;
+        }
 
-    public List<FolderNode> getChildren() {
-        return children;
-    }
 
-    public void setChildren(List<FolderNode> children) {
-        this.children = children;
+        public List<FolderNode> getChildren() {
+            return children;
+        }
+
+        public void setChildren(List<FolderNode> children) {
+            this.children = children;
+        }
     }
 }
