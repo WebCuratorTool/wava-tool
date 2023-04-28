@@ -29,7 +29,11 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
             return job + File.separator + harvestResultNumber;
         }
         String fullPath = node.getAbsolutePath();
-        return fullPath.substring(this.getBaseDir().length());
+        if (fullPath.length() > this.getBaseDir().length()) {
+            return fullPath.substring(this.getBaseDir().length());
+        } else {
+            return "";
+        }
     }
 
     @Override
