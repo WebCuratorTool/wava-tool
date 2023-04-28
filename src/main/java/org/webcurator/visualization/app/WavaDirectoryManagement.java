@@ -14,6 +14,12 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
 
     public WavaDirectoryManagement(String baseDir, String baseLogDir, String baseReportDir) {
         super(baseDir, baseLogDir, baseReportDir);
+        this.baseWarcFolderNode = treeHarvestResults(new File(this.getBaseDir()));
+        if (this.baseWarcFolderNode == null) {
+            this.baseWarcFolderNode = new FolderNode();
+            this.baseWarcFolderNode.setChildren(new ArrayList<>());
+        }
+        this.baseWarcFolderNode.setTitle(this.getBaseDir());
     }
 
     @Override
@@ -36,16 +42,6 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     }
 
     public FolderNode treeHarvestResults() {
-        this.mapWarcFolders.clear();
-        this.baseWarcFolderNode = null;
-
-        this.baseWarcFolderNode = treeHarvestResults(new File(this.getBaseDir()));
-        if (this.baseWarcFolderNode == null) {
-            this.baseWarcFolderNode = new FolderNode();
-            this.baseWarcFolderNode.setChildren(new ArrayList<>());
-        }
-        this.baseWarcFolderNode.setTitle(this.getBaseDir());
-
         return this.baseWarcFolderNode;
     }
 
