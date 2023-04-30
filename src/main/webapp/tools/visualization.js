@@ -282,10 +282,10 @@ var itemsRecrawlHarvest={
 };
 
 var itemsBrowse={ 
-  "browse-local": {name: "WCT Browse", icon: "far fa-dot-circle"},
+  // "browse-local": {name: "WCT Browse", icon: "far fa-dot-circle"},
   "browse-livesite": {name: "Live Site Browse", icon: "far fa-dot-circle"},
   "browse-accesstool": {name: "Access Tool Browse", icon: "far fa-dot-circle"},
-  "browse-archive": {name: "Archive Browse", icon: "far fa-dot-circle"},
+  // "browse-archive": {name: "Archive Browse", icon: "far fa-dot-circle"},
 };
 
 var itemsExportLinks={
@@ -304,10 +304,10 @@ var contextMenuItemsUrlBasic={
   "sep1": "---------",
   "hoppath-current": {name: "Show HopPath", icon: "fas fa-link", disabled: disableFolderUrlMenuItems},
   "outlinks-current": {name: "Show Outlinks", icon: "fas fa-share-alt", disabled: disableFolderUrlMenuItems},
-  "sep2": "---------",
-  "pruneHarvest": {name: "Prune", icon: "far fa-times-circle", items: itemsPruneHarvest},
-  "recrawlHarvest": {name: "Recrawl", icon: "fas fa-redo", items: itemsRecrawlHarvest},
-  "import-current": {name: "Import From File", icon: "fas fa-file-import"},
+  // "sep2": "---------",
+  // "pruneHarvest": {name: "Prune", icon: "far fa-times-circle", items: itemsPruneHarvest},
+  // "recrawlHarvest": {name: "Recrawl", icon: "fas fa-redo", items: itemsRecrawlHarvest},
+  // "import-current": {name: "Import From File", icon: "fas fa-file-import"},
   "sep3": "---------",
   "browse": {name: "Browse", icon: "fab fa-internet-explorer text-primary", items: itemsBrowse, disabled: disableFolderUrlMenuItems},
   "download": {name: "Download", icon: "fas fa-download text-warning", disabled: disableFolderUrlMenuItems},
