@@ -26,12 +26,16 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     public String getSubHarvestResultFolder(long job, int harvestResultNumber) {
         FolderNode node = mapWarcFolders.get(job);
         if (node == null) {
+            System.out.println("node is null");
             return job + File.separator + harvestResultNumber;
         }
         String fullPath = node.getAbsolutePath();
+        System.out.println("fullPath: " + fullPath + ", baseDir: " + this.getBaseDir());
         if (fullPath.length() > this.getBaseDir().length()) {
+            System.out.println("Returning substring: " + fullPath.substring(this.getBaseDir().length()));
             return fullPath.substring(this.getBaseDir().length());
         } else {
+            System.out.println("Returning  empty substring");
             return "";
         }
     }
