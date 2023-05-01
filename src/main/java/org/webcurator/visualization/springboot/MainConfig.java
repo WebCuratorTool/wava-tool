@@ -28,6 +28,7 @@ import org.webcurator.core.store.*;
 import org.webcurator.core.util.ApplicationContextFactory;
 import org.webcurator.domain.model.core.HarvestResult;
 import org.webcurator.visualization.app.WavaDirectoryManagement;
+
 import javax.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -116,6 +117,9 @@ public class MainConfig {
     @Value(("${visualization.dbVersion}"))
     private String visualizationDbVersion;
 
+    @Value(("${harvestResourceUrlMapper.urlMap}"))
+    private String urlMapOfHarvestResourceUrlMapper;
+
     @PostConstruct
     public void init() {
         ApplicationContextFactory.setApplicationContext(applicationContext);
@@ -148,7 +152,9 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationDirectoryManager visualizationDirectoryManager() {
-        return new WavaDirectoryManagement(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
+        WavaDirectoryManagement bean = new WavaDirectoryManagement(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
+        bean.setOpenWayBack(urlMapOfHarvestResourceUrlMapper);
+        return bean;
     }
 
     @Bean
