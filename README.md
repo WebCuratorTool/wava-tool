@@ -1,42 +1,94 @@
-WebCurator Store
+WAVA Tool
 ================
 
-WebCurator webapp for storing web harvests.
+Web Archive Visualization and Analysis (WAVA) Tool is the standalone version of the Harvest Visualization and Analysis feature in the WebCurator Tool (WCT). It has been customized to run outside of the WCT, but still depends on core WCT code that keeps the projects in sync. WAVA Tool does not include the Patching functionality that the WCT feature has.
+
+The WAVA Tool is intended to be used with harvests/crawls of single websites or harvests/crawls of a small set of websites. It is not designed to work with domain crawls or similar large scale harvest/crawls.
 
 
-Synopsis
---------
+Requirements
+-------------
 
-The `webcurator-store` project build produces a ``webcurator-store-<version>.war``, which is used to store the
-harvests produced by the WebCurator web crawlers. WebCurator Store is part of the `WebCuratorTool set of applications`_.
+- Apache Maven 3+ (required to build from source)
 
+- Gradle 5.6+ (required to build from source)
 
-Versioning
-----------
+- Java - WAVA Tool has been developed and testing on Java 8
 
-See the ``build.gradle`` file for the current war version that will be generated.
-
-
-Build and installation
-----------------------
-
-Complete build and installation instructions can be found in the `WebCurator documentation repository`_ in the
-*Developer Guide*.
+- [WebCurator Tool project](https://github.com/WebCuratorTool/webcurator) - WAVA Tool requires the webcurator-core dependency from the WebCurator Tool project to be compiled and installed in the local maven repository
 
 
-Contributors
-------------
+Configration
+-------------
 
-See individual git commits for code authorship. Issues are tracked through the git repository issue tracker.
+Configuration for the tool is set in application.properties. Located in the project here `src/main/resources/application.properties`
+
+Common properties to configure:
+
+- Configure the port the tool runs on. This is the port used to access the tool in your browser.
+
+  `server.port=8080`
+
+- Configure the directory the tool loads harvests from
+
+  `arcDigitalAssetStoreService.baseDir=/app/harvests`
+
+- Configure the URL for linking to a Wayback instance of a harvest
+
+  `harvestResourceUrlMapper.urlMap=http://localhost:8090/wayback/*/`
 
 
-License
--------
+Build
+-----------
 
-|copy| 2006 |---| 2018 The National Library of New Zealand, Koninklijke Bibliotheek and others. See individual
-commits to determine code authorship. Apache 2.0 License.
+From the project directory run:
 
-.. _`WebCuratorTool set of applications`: https://github.com/WebCuratorTool
-.. _`WebCurator documentation repository`: https://github.com/WebCuratorTool/webcurator-docs
-.. |copy| unicode:: 0xA9 .. copyright sign
-.. |---| unicode:: 0x2014 .. m-dash
+`./gradlew clean install`
+
+The project binary is built in `build/libs/`
+
+
+Harvest Setup
+--------------------------
+
+The WAVA tool can access harvests located in the directory specified in the `arcDigitalAssetStoreService.baseDir` property.
+
+Place each harvest in its own sub-folder within the base directory.
+
+E.g.
+```
+app/harvests/
+|-- website_1/
+  |-- website_1_file_1.warc
+  |-- website_1_file_2.warc
+|-- website_2/
+  |-- website_2_file_1.warc
+  |-- website_2_file_2.warc
+```
+
+Run
+-----------
+
+`java -jar wava-tool-<version>.war`
+
+Open localhost:8080 in your web browser
+
+
+
+Limitations
+---------------
+
+WAVA Tool is generally limited by the resources available. Two scenarios can cause slowness or unresponsiveness
+
+- A harvest with a large number of URLs (5000+) within a small number of domains can cause unresponsiveness within the URL views, paricularly when filtering.
+
+- A harvest with a large number of domains can cause the visualization to be slow to draw and interact with.
+
+
+
+Documentation
+---------------
+
+See the [WebCurator Tool documentation](https://webcuratortool.readthedocs.io/en/latest/guides/user-manual.html#harvest-analysis) for details
+
+
