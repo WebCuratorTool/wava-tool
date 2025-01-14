@@ -17,8 +17,8 @@ import org.springframework.core.io.Resource;
 import org.webcurator.core.harvester.coordinator.PatchingHarvestLogManager;
 import org.webcurator.core.visualization.VisualizationDirectoryManager;
 import org.webcurator.core.visualization.VisualizationProcessorManager;
-import org.webcurator.core.visualization.browser.VisWayBackClient;
-import org.webcurator.core.visualization.browser.VisWayBackClientLocal;
+//import org.webcurator.core.visualization.browser.VisWayBackClient;
+//import org.webcurator.core.visualization.browser.VisWayBackClientLocal;
 import org.webcurator.core.visualization.networkmap.NetworkMapDomainSuffix;
 import org.webcurator.core.visualization.networkmap.bdb.BDBNetworkMapPool;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlDTO;
@@ -153,7 +153,7 @@ public class MainConfig {
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationDirectoryManager visualizationDirectoryManager() {
         WavaDirectoryManagement bean = new WavaDirectoryManagement(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
-        bean.setOpenWayBack(urlMapOfHarvestResourceUrlMapper);
+//        bean.setOpenWayBack(urlMapOfHarvestResourceUrlMapper);
         return bean;
     }
 
@@ -252,7 +252,7 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public BDBNetworkMapPool bdbDatabasePool() {
-        BDBNetworkMapPool pool = new BDBNetworkMapPool(visualizationDirectoryManager(), visualizationDbVersion);
+        BDBNetworkMapPool pool = new BDBNetworkMapPool(arcDigitalAssetStoreServiceBaseDir, visualizationDbVersion);
         return pool;
     }
 
@@ -262,12 +262,12 @@ public class MainConfig {
         return new NetworkMapClientLocal(bdbDatabasePool(), visualizationProcessorQueue());
     }
 
-    @Bean
-    public VisWayBackClient visWayBackClient() {
-        VisWayBackClientLocal bean = new VisWayBackClientLocal();
-        bean.setBaseDir(arcDigitalAssetStoreServiceBaseDir);
-        bean.setDirectoryManager(visualizationDirectoryManager());
-        bean.setNetworkMapClient(networkMapLocalClient());
-        return bean;
-    }
+//    @Bean
+//    public VisWayBackClient visWayBackClient() {
+//        VisWayBackClientLocal bean = new VisWayBackClientLocal();
+//        bean.setBaseDir(arcDigitalAssetStoreServiceBaseDir);
+//        bean.setDirectoryManager(visualizationDirectoryManager());
+//        bean.setNetworkMapClient(networkMapLocalClient());
+//        return bean;
+//    }
 }

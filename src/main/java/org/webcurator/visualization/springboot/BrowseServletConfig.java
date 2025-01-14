@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.webcurator.core.visualization.browser.BrowseHelper;
+//import org.webcurator.core.visualization.browser.BrowseHelper;
 
 
 /**
@@ -23,8 +23,8 @@ public class BrowseServletConfig {
     @Autowired
     private MainConfig baseConfig;
 
-    @Bean
-    public BrowseHelper browseHelper() {
-        return BrowseHelper.browseHelper(browseHelperPrefix,browseDoubleEscape);
-    }
+//    @Bean
+//    public BrowseHelper browseHelper() {
+//        return BrowseHelper.browseHelper(browseHelperPrefix,browseDoubleEscape);
+//    }
 }

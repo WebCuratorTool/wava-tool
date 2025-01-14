@@ -22,7 +22,6 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         this.baseWarcFolderNode.setTitle(this.getBaseDir());
     }
 
-    @Override
     public String getSubHarvestResultFolder(long job, int harvestResultNumber) {
         FolderNode node = mapWarcFolders.get(job);
         if (node == null) {
@@ -40,7 +39,6 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         }
     }
 
-    @Override
     public String getDbName(long job, int harvestResultNumber) {
         FolderNode node = mapWarcFolders.get(job);
         if (node == null) {
