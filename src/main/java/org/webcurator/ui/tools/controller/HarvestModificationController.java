@@ -76,4 +76,9 @@ public class HarvestModificationController implements ModifyService {
     public NetworkMapResult checkAndAppendModificationRows(@RequestParam("targetInstanceOid") long targetInstanceId, @RequestParam("harvestNumber") int harvestResultNumber, @RequestBody List<ModifyRowFullData> dataset) {
         return harvestModificationHandler.checkAndAppendModificationRows(targetInstanceId, harvestResultNumber, dataset);
     }
+
+    @RequestMapping(path = VisualizationConstants.ROOT_PATH+ "/initial-wava-index", method = {RequestMethod.POST, RequestMethod.GET})
+    public NetworkMapResult initialWavaIndex(@RequestParam("job") long targetInstanceId, @RequestParam("harvestResultNumber") int harvestResultNumber) {
+        return harvestModificationHandler.initialWavaIndex(targetInstanceId, harvestResultNumber);
+    }
 }

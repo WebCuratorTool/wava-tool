@@ -70,7 +70,7 @@ public class TestWavaDirectoryManagement {
 
     private void walkNodes(WavaDirectoryManagement testInstance, WavaDirectoryManagement.FolderNode node) {
         if (!node.isFolder()) {
-            File hrPath = new File(testInstance.getSubHarvestResultFolder(node.getTiId(), node.getHrNum()));
+            File hrPath = new File(testInstance.getAbsoluteSubHarvestResultFolder(node.getTiId(), node.getHrNum()));
             assert hrPath != null;
             assert hrPath.getAbsolutePath().equalsIgnoreCase(node.getAbsolutePath());
             System.out.println("BaseDir:" + testInstance.getBaseDir() + ", HarvestResult Path:" + hrPath.getAbsolutePath());

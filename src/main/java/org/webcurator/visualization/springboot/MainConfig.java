@@ -17,8 +17,6 @@ import org.springframework.core.io.Resource;
 import org.webcurator.core.harvester.coordinator.PatchingHarvestLogManager;
 import org.webcurator.core.visualization.VisualizationDirectoryManager;
 import org.webcurator.core.visualization.VisualizationProcessorManager;
-//import org.webcurator.core.visualization.browser.VisWayBackClient;
-//import org.webcurator.core.visualization.browser.VisWayBackClientLocal;
 import org.webcurator.core.visualization.networkmap.NetworkMapDomainSuffix;
 import org.webcurator.core.visualization.networkmap.bdb.BDBNetworkMapPool;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlDTO;
@@ -27,6 +25,7 @@ import org.webcurator.core.visualization.networkmap.service.NetworkMapClient;
 import org.webcurator.core.store.*;
 import org.webcurator.core.util.ApplicationContextFactory;
 import org.webcurator.domain.model.core.HarvestResult;
+import org.webcurator.visualization.app.WavaBDBNetworkMapPool;
 import org.webcurator.visualization.app.WavaDirectoryManagement;
 
 import javax.annotation.PostConstruct;
@@ -153,16 +152,13 @@ public class MainConfig {
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationDirectoryManager visualizationDirectoryManager() {
         WavaDirectoryManagement bean = new WavaDirectoryManagement(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
-//        bean.setOpenWayBack(urlMapOfHarvestResourceUrlMapper);
         return bean;
     }
 
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationProcessorManager visualizationProcessorQueue() {
-        return new VisualizationProcessorManager(visualizationDirectoryManager(),
-                null,
-                maxConcurrencyModThreads);
+        return new VisualizationProcessorManager(visualizationDirectoryManager(), null, maxConcurrencyModThreads);
     }
 
     @SuppressWarnings("unchecked")
@@ -189,9 +185,7 @@ public class MainConfig {
         ListFactoryBean bean = new ListFactoryBean();
 
         List<RunnableIndex> sourceList = new ArrayList<>();
-//        sourceList.add(wctIndexer());
         sourceList.add(waybackIndexer());
-//        sourceList.add(crawlLogIndexer());
         sourceList.add(cdxIndexer());
 
         bean.setSourceList(sourceList);
@@ -204,7 +198,6 @@ public class MainConfig {
     public WaybackIndexer waybackIndexer() {
         WaybackIndexer bean = new WaybackIndexer(wctCoreWsEndpointBaseUrl, restTemplateBuilder);
         bean.setEnabled(waybackIndexerEnabled);
-//        bean.setWsEndPoint(wctCoreWsEndpoint());
         bean.setWaittime(waybackIndexerWaitTime);
         bean.setTimeout(waybackIndexerTimeout);
         bean.setWaybackInputFolder(waybackIndexerWaybackInputFolder);
@@ -252,7 +245,7 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public BDBNetworkMapPool bdbDatabasePool() {
-        BDBNetworkMapPool pool = new BDBNetworkMapPool(arcDigitalAssetStoreServiceBaseDir, visualizationDbVersion);
+        BDBNetworkMapPool pool = new WavaBDBNetworkMapPool(arcDigitalAssetStoreServiceBaseDir, visualizationDbVersion, (WavaDirectoryManagement) visualizationDirectoryManager());
         return pool;
     }
 
@@ -262,12 +255,4 @@ public class MainConfig {
         return new NetworkMapClientLocal(bdbDatabasePool(), visualizationProcessorQueue());
     }
 
-//    @Bean
-//    public VisWayBackClient visWayBackClient() {
-//        VisWayBackClientLocal bean = new VisWayBackClientLocal();
-//        bean.setBaseDir(arcDigitalAssetStoreServiceBaseDir);
-//        bean.setDirectoryManager(visualizationDirectoryManager());
-//        bean.setNetworkMapClient(networkMapLocalClient());
-//        return bean;
-//    }
 }

@@ -1,5 +1,7 @@
 package org.webcurator.visualization.app;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.webcurator.core.util.PatchUtil;
 import org.webcurator.core.visualization.VisualizationDirectoryManager;
 
@@ -8,7 +10,8 @@ import java.util.*;
 
 
 public class WavaDirectoryManagement extends VisualizationDirectoryManager {
-    private Map<Long, FolderNode> mapWarcFolders = new HashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(WavaDirectoryManagement.class);
+    private final Map<Long, FolderNode> mapWarcFolders = new HashMap<>();
     private FolderNode baseWarcFolderNode;
     private long tiId = 1;
 
@@ -22,21 +25,30 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         this.baseWarcFolderNode.setTitle(this.getBaseDir());
     }
 
-    public String getSubHarvestResultFolder(long job, int harvestResultNumber) {
+    public String getSubHarvestResultFolder(long tiOid, int hrNum) {
+        FolderNode node = mapWarcFolders.get(tiOid);
+        if (node == null) {
+            log.error("node is null: {} {}", tiOid, hrNum);
+            return tiOid + File.separator + hrNum;
+        }
+        String fullPath = node.getAbsolutePath();
+        log.info("fullPath: {}, baseDir: {}", fullPath, this.getBaseDir());
+        if (fullPath.length() > this.getBaseDir().length()) {
+            log.info("Returning substring: {}", fullPath.substring(this.getBaseDir().length()));
+            return fullPath.substring(this.getBaseDir().length());
+        } else {
+            log.error("Returning empty substring");
+            return "";
+        }
+    }
+
+    public String getAbsoluteSubHarvestResultFolder(long job, int harvestResultNumber) {
         FolderNode node = mapWarcFolders.get(job);
         if (node == null) {
             System.out.println("node is null");
             return job + File.separator + harvestResultNumber;
         }
-        String fullPath = node.getAbsolutePath();
-        System.out.println("fullPath: " + fullPath + ", baseDir: " + this.getBaseDir());
-        if (fullPath.length() > this.getBaseDir().length()) {
-            System.out.println("Returning substring: " + fullPath.substring(this.getBaseDir().length()));
-            return fullPath.substring(this.getBaseDir().length());
-        } else {
-            System.out.println("Returning  empty substring");
-            return "";
-        }
+        return node.getAbsolutePath();
     }
 
     public String getDbName(long job, int harvestResultNumber) {

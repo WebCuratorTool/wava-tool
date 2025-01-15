@@ -24,14 +24,18 @@ import org.webcurator.core.visualization.VisualizationDirectoryManager;
 import org.webcurator.core.visualization.modification.metadata.ModifyApplyCommand;
 import org.webcurator.core.visualization.modification.metadata.ModifyResult;
 import org.webcurator.core.visualization.modification.metadata.ModifyRowFullData;
+import org.webcurator.core.visualization.networkmap.bdb.BDBNetworkMapPool;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkDbVersionDTO;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlDTO;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapResult;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlEntity;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapUrlCommand;
+import org.webcurator.core.visualization.networkmap.processor.IndexProcessor;
 import org.webcurator.core.visualization.networkmap.service.NetworkMapClient;
 import org.webcurator.domain.model.core.HarvestResult;
 import org.webcurator.domain.model.core.HarvestResultDTO;
+import org.webcurator.visualization.app.WavaDirectoryManagement;
+import org.webcurator.visualization.app.WavaIndexProcessorWarc;
 
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,6 +72,9 @@ public class HarvestModificationHandler {
 
     @Autowired
     private VisualizationDirectoryManager directoryManager;
+
+    @Autowired
+    private BDBNetworkMapPool dbPool;
 
     @Value("${qualityReviewToolController.archiveUrl}")
     private String openWayBack;
@@ -448,5 +455,17 @@ public class HarvestModificationHandler {
         }
 
         return result;
+    }
+
+    public NetworkMapResult initialWavaIndex(long targetInstanceId, int harvestResultNumber) {
+        NetworkMapResult ret = NetworkMapResult.getSuccessResult();
+        try {
+            WavaIndexProcessorWarc indexer = new WavaIndexProcessorWarc(dbPool, targetInstanceId, harvestResultNumber, (WavaDirectoryManagement) directoryManager, networkMapClient);
+            indexer.processInternal();
+        } catch (Exception e) {
+            ret.setRspCode(500);
+            ret.setRspMsg(e.getMessage());
+        }
+        return ret;
     }
 }

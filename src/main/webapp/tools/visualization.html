@@ -629,7 +629,7 @@ to get the desired effect
 
     var timerProgress;
     function reindex(){
-      var reqUrl="/visualization/index/initial?job=" + jobId + "&harvestResultNumber=" + harvestResultNumber;
+      var reqUrl="/initial-wava-index?job=" + jobId + "&harvestResultNumber=" + harvestResultNumber;
       fetchHttp(reqUrl, null, function(response){
         console.log(response.rspCode + ': ' + response.rspMsg);
 
