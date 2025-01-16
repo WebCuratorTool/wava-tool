@@ -11,27 +11,27 @@ import java.util.*;
 
 public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     private static final Logger log = LoggerFactory.getLogger(WavaDirectoryManagement.class);
-    private final Map<Long, WavaFolderNode> mapWarcFolders = new HashMap<>();
-    private WavaFolderNode baseWarcFolderNode;
+    private final Map<Long, WavaTreeNode> mapWarcFolders = new HashMap<>();
+    private WavaTreeNode baseWarcFolderNode;
     private long tiId = 1;
 
     public WavaDirectoryManagement(String baseDir, String baseLogDir, String baseReportDir) {
         super(baseDir, baseLogDir, baseReportDir);
         this.baseWarcFolderNode = treeHarvestResults(new File(this.getBaseDir()));
         if (this.baseWarcFolderNode == null) {
-            this.baseWarcFolderNode = new WavaFolderNode();
+            this.baseWarcFolderNode = new WavaTreeNode();
             this.baseWarcFolderNode.setChildren(new ArrayList<>());
         }
-        this.baseWarcFolderNode.setTitle(this.getBaseDir());
+        this.baseWarcFolderNode.getData().setLabel(this.getBaseDir());
     }
 
     public String getSubHarvestResultFolder(long tiOid, int hrNum) {
-        WavaFolderNode node = mapWarcFolders.get(tiOid);
+        WavaTreeNode node = mapWarcFolders.get(tiOid);
         if (node == null) {
             log.error("node is null: {} {}", tiOid, hrNum);
             return tiOid + File.separator + hrNum;
         }
-        String fullPath = node.getAbsolutePath();
+        String fullPath = node.getData().getAbsolutePath();
         log.info("fullPath: {}, baseDir: {}", fullPath, this.getBaseDir());
         if (fullPath.length() > this.getBaseDir().length()) {
             log.info("Returning substring: {}", fullPath.substring(this.getBaseDir().length()));
@@ -43,56 +43,62 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     }
 
     public String getAbsoluteSubHarvestResultFolder(long job, int harvestResultNumber) {
-        WavaFolderNode node = mapWarcFolders.get(job);
+        WavaTreeNode node = mapWarcFolders.get(job);
         if (node == null) {
             System.out.println("node is null");
             return job + File.separator + harvestResultNumber;
         }
-        return node.getAbsolutePath();
+        return node.getData().getAbsolutePath();
     }
 
     public String getDbName(long job, int harvestResultNumber) {
-        WavaFolderNode node = mapWarcFolders.get(job);
+        WavaTreeNode node = mapWarcFolders.get(job);
         if (node == null) {
             return job + "-" + harvestResultNumber;
         }
-        return node.getAbsolutePath();
+        return node.getData().getAbsolutePath();
     }
 
-    public WavaFolderNode treeHarvestResults() {
+    public WavaTreeNode treeHarvestResults() {
         return this.baseWarcFolderNode;
     }
 
-    public WavaFolderNode treeHarvestResults(File rootPath) {
+    public WavaTreeNode treeHarvestResults(File rootPath) {
         if (rootPath.isFile() && !this.isWarcFile(rootPath.getName())) {
             return null;
         }
 
         this.tiId++;
 
-        WavaFolderNode node = new WavaFolderNode();
+        WavaTreeNode node = new WavaTreeNode();
         node.setKey(rootPath.getAbsolutePath());
-        node.setTiId(this.tiId);
-        node.setTitle(rootPath.getName());
-        node.setAbsolutePath(rootPath.getAbsolutePath());
-        node.setHrNum(1);
+
+        WavaTreeDataNode data = new WavaTreeDataNode();
+        node.setData(data);
+
+        data.setTiId(this.tiId);
+        data.setLabel(rootPath.getName());
+        data.setAbsolutePath(rootPath.getAbsolutePath());
+        data.setHrNum(1);
         mapWarcFolders.put(this.tiId, node);
 
         if (rootPath.isFile()) {
             node.setChildren(null);
-            node.setSelectable(false);
-            node.setFolder(false);
-            node.setSize(rootPath.length());
+            data.setFolder(false);
+            data.setSize(rootPath.length());
             return node;
         } else if (rootPath.isDirectory()) {
-            List<WavaFolderNode> childrenNodes = new ArrayList<>();
+            if (rootPath.getName().equalsIgnoreCase("_resource") || rootPath.getName().equalsIgnoreCase("logs") || rootPath.getName().equalsIgnoreCase("reports")) {
+                return null;
+            }
+            List<WavaTreeNode> childrenNodes = new ArrayList<>();
             File[] children = rootPath.listFiles();
             if (children == null) {
                 return node;
             }
 
             for (File f : children) {
-                WavaFolderNode childNode = this.treeHarvestResults(f);
+                WavaTreeNode childNode = this.treeHarvestResults(f);
                 if (childNode != null) {
                     childrenNodes.add(childNode);
                 }
@@ -103,7 +109,10 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
             }
 
             List<File> warcFiles = PatchUtil.listWarcFiles(rootPath);
-            node.setSelectable(warcFiles.isEmpty());
+            if (!warcFiles.isEmpty()) {
+                node.setType("url");
+            }
+
             return node;
         }
         return null;

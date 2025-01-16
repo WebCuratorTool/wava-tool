@@ -46,7 +46,11 @@ public class WavaBDBNetworkMapPool extends BDBNetworkMapPool {
         //Clear the path
         File dbPath = this.getWavaDbPath(job, harvestResultNumber);
         if (dbPath.exists()) {
-            WctUtils.cleanDirectory(dbPath);
+            try {
+                WctUtils.cleanDirectory(dbPath);
+            } catch (Exception e) {
+                log.warn("Failed to clean the directory: {}", dbPath);
+            }
         } else {
             log.warn("Recover db files: {}", dbPath);
         }

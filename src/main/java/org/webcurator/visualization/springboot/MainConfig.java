@@ -27,6 +27,8 @@ import org.webcurator.core.util.ApplicationContextFactory;
 import org.webcurator.domain.model.core.HarvestResult;
 import org.webcurator.visualization.app.WavaBDBNetworkMapPool;
 import org.webcurator.visualization.app.WavaDirectoryManagement;
+import org.webcurator.core.coordinator.WctCoordinatorClient;
+import org.webcurator.visualization.app.WavaWctCoordinatorClient;
 
 import javax.annotation.PostConstruct;
 import java.nio.file.Files;
@@ -150,6 +152,13 @@ public class MainConfig {
 
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
+    public WctCoordinatorClient wctCoordinatorClient() {
+        WctCoordinatorClient bean = new WavaWctCoordinatorClient(wctCoreWsEndpointBaseUrl, restTemplateBuilder);
+        return bean;
+    }
+
+    @Bean
+    @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationDirectoryManager visualizationDirectoryManager() {
         WavaDirectoryManagement bean = new WavaDirectoryManagement(arcDigitalAssetStoreServiceBaseDir, "logs", "reports");
         return bean;
@@ -158,7 +167,7 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public VisualizationProcessorManager visualizationProcessorQueue() {
-        return new VisualizationProcessorManager(visualizationDirectoryManager(), null, maxConcurrencyModThreads);
+        return new VisualizationProcessorManager(visualizationDirectoryManager(), wctCoordinatorClient(), maxConcurrencyModThreads);
     }
 
     @SuppressWarnings("unchecked")

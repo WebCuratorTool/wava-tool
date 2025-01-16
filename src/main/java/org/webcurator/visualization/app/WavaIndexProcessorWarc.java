@@ -59,6 +59,25 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
         //Do nothing
     }
 
+    public boolean process() {
+        try {
+            this.status = HarvestResult.STATUS_RUNNING;
+            updateHarvestResultStatus();
+            processInternal();
+            this.close();
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to process", e);
+            return false;
+        } finally {
+            this.progressBar.clear();
+            if (this.status == HarvestResult.STATUS_RUNNING) {
+                this.status = HarvestResult.STATUS_FINISHED;
+            }
+            processorManager.finalise(this);
+
+        }
+    }
 
     public boolean isNotWarcFormat(String name) {
         return !name.toLowerCase().endsWith(org.archive.format.warc.WARCConstants.DOT_WARC_FILE_EXTENSION) &&

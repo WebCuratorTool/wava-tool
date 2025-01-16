@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -23,7 +24,7 @@ public class VisServiceController {
     final private AtomicLong hrOid = new AtomicLong(0);
 
     @RequestMapping(path = "/curator/vis/all_hr_results", method = {RequestMethod.POST, RequestMethod.GET})
-    public WavaFolderNode getAllHarvestResults() {
-        return ((WavaDirectoryManagement) dirMgmt).treeHarvestResults();
+    public List<WavaTreeNode> getAllHarvestResults() {
+        return ((WavaDirectoryManagement) dirMgmt).treeHarvestResults().getChildren();
     }
 }

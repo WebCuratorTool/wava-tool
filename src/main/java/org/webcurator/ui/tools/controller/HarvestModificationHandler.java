@@ -21,6 +21,7 @@ import org.webcurator.core.exceptions.DigitalAssetStoreException;
 import org.webcurator.core.harvester.coordinator.PatchingHarvestLogManager;
 import org.webcurator.core.visualization.VisualizationConstants;
 import org.webcurator.core.visualization.VisualizationDirectoryManager;
+import org.webcurator.core.visualization.VisualizationProcessorManager;
 import org.webcurator.core.visualization.modification.metadata.ModifyApplyCommand;
 import org.webcurator.core.visualization.modification.metadata.ModifyResult;
 import org.webcurator.core.visualization.modification.metadata.ModifyRowFullData;
@@ -72,6 +73,9 @@ public class HarvestModificationHandler {
 
     @Autowired
     private VisualizationDirectoryManager directoryManager;
+
+    @Autowired
+    private VisualizationProcessorManager visualizationProcessorManager;
 
     @Autowired
     private BDBNetworkMapPool dbPool;
@@ -461,7 +465,8 @@ public class HarvestModificationHandler {
         NetworkMapResult ret = NetworkMapResult.getSuccessResult();
         try {
             WavaIndexProcessorWarc indexer = new WavaIndexProcessorWarc(dbPool, targetInstanceId, harvestResultNumber, (WavaDirectoryManagement) directoryManager, networkMapClient);
-            indexer.processInternal();
+//            indexer.processInternal();
+            visualizationProcessorManager.startTask(indexer);
         } catch (Exception e) {
             ret.setRspCode(500);
             ret.setRspMsg(e.getMessage());

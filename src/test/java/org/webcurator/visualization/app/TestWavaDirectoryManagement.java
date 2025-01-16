@@ -18,9 +18,9 @@ public class TestWavaDirectoryManagement {
     public void testTreeHarvestResults() {
         String baseDir = "/usr/local/wct/store";
         WavaDirectoryManagement testInstance = new WavaDirectoryManagement(baseDir, baseLogDir, baseReportDir);
-        WavaFolderNode folders = testInstance.treeHarvestResults();
-        System.out.println(folders.getTitle());
-        WavaFolderNode leaf = getOneLeafNode(folders);
+        WavaTreeNode folders = testInstance.treeHarvestResults();
+        System.out.println(folders.getLabel());
+        WavaTreeNode leaf = getOneLeafNode(folders);
 //        assert leaf != null;
     }
 
@@ -41,8 +41,8 @@ public class TestWavaDirectoryManagement {
     private void testGetHarvestResultPath(String baseDir) {
         WavaDirectoryManagement testInstance = new WavaDirectoryManagement(baseDir, baseLogDir, baseReportDir);
 
-        WavaFolderNode folders = testInstance.treeHarvestResults();
-        System.out.println(folders.getTitle());
+        WavaTreeNode folders = testInstance.treeHarvestResults();
+        System.out.println(folders.getLabel());
 
         walkNodes(testInstance, folders);
     }
@@ -57,18 +57,18 @@ public class TestWavaDirectoryManagement {
         Files.createFile(warcFile.toPath());
     }
 
-    private WavaFolderNode getOneLeafNode(WavaFolderNode node) {
+    private WavaTreeNode getOneLeafNode(WavaTreeNode node) {
         if (!node.isFolder()) {
             return node;
         }
 
-        for (WavaFolderNode children : node.getChildren()) {
+        for (WavaTreeNode children : node.getChildren()) {
             return getOneLeafNode(children);
         }
         return null;
     }
 
-    private void walkNodes(WavaDirectoryManagement testInstance, WavaFolderNode node) {
+    private void walkNodes(WavaDirectoryManagement testInstance, WavaTreeNode node) {
         if (node == null || node.getChildren() == null) {
             return;
         }
@@ -81,7 +81,7 @@ public class TestWavaDirectoryManagement {
             return;
         }
 
-        for (WavaFolderNode children : node.getChildren()) {
+        for (WavaTreeNode children : node.getChildren()) {
             walkNodes(testInstance, children);
         }
     }
