@@ -5,13 +5,18 @@ export const routes = {
     routes: [
         {
             path: '/',
-            children: [
-                {
-                    path: '',
-                    name: 'home',
-                    component: () => import('@/views/MainView.vue')
-                }
-            ]
+            name: 'default',
+            component: () => import('@/views/MainView.vue')
+        },
+        {
+            path: '/home',
+            name: 'home',
+            component: () => import('@/views/MainView.vue')
+        },
+        {
+            path: '/wava',
+            name: 'wava',
+            component: () => import('@/views/MainView.vue')
         }
     ]
 };

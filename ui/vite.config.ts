@@ -23,7 +23,7 @@ export default defineConfig({
   },
   server: {
     open: false,
-    port: 5173,
+    port: 5175,
     // https: false,
     // hotOnly: false,
   },
