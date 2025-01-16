@@ -60,6 +60,7 @@ declare module 'vue' {
     ToggleSwitch: typeof import('primevue/toggleswitch')['default']
     Toolbar: typeof import('primevue/toolbar')['default']
     Tree: typeof import('primevue/tree')['default']
+    TreeTable: typeof import('primevue/treetable')['default']
     WctFormField: typeof import('./src/components/WctFormField.vue')['default']
     WctSearchField: typeof import('./src/components/WctSearchField.vue')['default']
     WctTabViewPanel: typeof import('./src/components/WctTabViewPanel.vue')['default']

@@ -11,22 +11,22 @@ import java.util.*;
 
 public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     private static final Logger log = LoggerFactory.getLogger(WavaDirectoryManagement.class);
-    private final Map<Long, FolderNode> mapWarcFolders = new HashMap<>();
-    private FolderNode baseWarcFolderNode;
+    private final Map<Long, WavaFolderNode> mapWarcFolders = new HashMap<>();
+    private WavaFolderNode baseWarcFolderNode;
     private long tiId = 1;
 
     public WavaDirectoryManagement(String baseDir, String baseLogDir, String baseReportDir) {
         super(baseDir, baseLogDir, baseReportDir);
         this.baseWarcFolderNode = treeHarvestResults(new File(this.getBaseDir()));
         if (this.baseWarcFolderNode == null) {
-            this.baseWarcFolderNode = new FolderNode();
+            this.baseWarcFolderNode = new WavaFolderNode();
             this.baseWarcFolderNode.setChildren(new ArrayList<>());
         }
         this.baseWarcFolderNode.setTitle(this.getBaseDir());
     }
 
     public String getSubHarvestResultFolder(long tiOid, int hrNum) {
-        FolderNode node = mapWarcFolders.get(tiOid);
+        WavaFolderNode node = mapWarcFolders.get(tiOid);
         if (node == null) {
             log.error("node is null: {} {}", tiOid, hrNum);
             return tiOid + File.separator + hrNum;
@@ -43,7 +43,7 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     }
 
     public String getAbsoluteSubHarvestResultFolder(long job, int harvestResultNumber) {
-        FolderNode node = mapWarcFolders.get(job);
+        WavaFolderNode node = mapWarcFolders.get(job);
         if (node == null) {
             System.out.println("node is null");
             return job + File.separator + harvestResultNumber;
@@ -52,120 +52,64 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
     }
 
     public String getDbName(long job, int harvestResultNumber) {
-        FolderNode node = mapWarcFolders.get(job);
+        WavaFolderNode node = mapWarcFolders.get(job);
         if (node == null) {
             return job + "-" + harvestResultNumber;
         }
         return node.getAbsolutePath();
     }
 
-    public FolderNode treeHarvestResults() {
+    public WavaFolderNode treeHarvestResults() {
         return this.baseWarcFolderNode;
     }
 
-    public FolderNode treeHarvestResults(File rootPath) {
-        if (rootPath == null || !rootPath.isDirectory()) {
+    public WavaFolderNode treeHarvestResults(File rootPath) {
+        if (rootPath.isFile() && !this.isWarcFile(rootPath.getName())) {
             return null;
-        }
-        List<File> warcFiles = PatchUtil.listWarcFiles(rootPath);
-        if (warcFiles.size() > 0) {
-            FolderNode node = new FolderNode();
-            node.setTitle("Harvest Result: " + rootPath.getName());
-            node.setFolder(false);
-            node.setAbsolutePath(rootPath.getAbsolutePath());
-            long tiId = this.tiId++;
-            node.setTiId(tiId);
-            node.setHrNum(1);
-            mapWarcFolders.put(tiId, node);
-            return node;
         }
 
-        File[] files = rootPath.listFiles();
-        if (files == null) {
-            return null;
-        }
-        Arrays.sort(files, new Comparator<File>() {
-            @Override
-            public int compare(File f0, File f1) {
-                return f0.getName().compareTo(f1.getName());
+        this.tiId++;
+
+        WavaFolderNode node = new WavaFolderNode();
+        node.setKey(rootPath.getAbsolutePath());
+        node.setTiId(this.tiId);
+        node.setTitle(rootPath.getName());
+        node.setAbsolutePath(rootPath.getAbsolutePath());
+        node.setHrNum(1);
+        mapWarcFolders.put(this.tiId, node);
+
+        if (rootPath.isFile()) {
+            node.setChildren(null);
+            node.setSelectable(false);
+            node.setFolder(false);
+            node.setSize(rootPath.length());
+            return node;
+        } else if (rootPath.isDirectory()) {
+            List<WavaFolderNode> childrenNodes = new ArrayList<>();
+            File[] children = rootPath.listFiles();
+            if (children == null) {
+                return node;
             }
-        });
-        List<FolderNode> children = new ArrayList<>();
-        for (File f : files) {
-            if (!f.isDirectory()) {
-                continue;
+
+            for (File f : children) {
+                WavaFolderNode childNode = this.treeHarvestResults(f);
+                if (childNode != null) {
+                    childrenNodes.add(childNode);
+                }
             }
-            FolderNode node = treeHarvestResults(f);
-            if (node != null) {
-                children.add(node);
+
+            if (!childrenNodes.isEmpty()) {
+                node.setChildren(childrenNodes);
             }
-        }
-        if (!children.isEmpty()) {
-            FolderNode node = new FolderNode();
-            node.setTitle(rootPath.getName());
-            node.setFolder(true);
-            node.setChildren(children);
+
+            List<File> warcFiles = PatchUtil.listWarcFiles(rootPath);
+            node.setSelectable(warcFiles.isEmpty());
             return node;
         }
         return null;
     }
 
-
-    static class FolderNode {
-        private String title;
-        private String absolutePath;
-        private long tiId;
-        private int hrNum;
-        private boolean folder = true;
-        private List<FolderNode> children;
-
-        public String getTitle() {
-            return title;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public String getAbsolutePath() {
-            return absolutePath;
-        }
-
-        public void setAbsolutePath(String absolutePath) {
-            this.absolutePath = absolutePath;
-        }
-
-        public long getTiId() {
-            return tiId;
-        }
-
-        public void setTiId(long tiId) {
-            this.tiId = tiId;
-        }
-
-        public int getHrNum() {
-            return hrNum;
-        }
-
-        public void setHrNum(int hrNum) {
-            this.hrNum = hrNum;
-        }
-
-        public boolean isFolder() {
-            return folder;
-        }
-
-        public void setFolder(boolean folder) {
-            this.folder = folder;
-        }
-
-
-        public List<FolderNode> getChildren() {
-            return children;
-        }
-
-        public void setChildren(List<FolderNode> children) {
-            this.children = children;
-        }
+    private boolean isWarcFile(String name) {
+        return name.toLowerCase().endsWith(".warc") || name.toLowerCase().endsWith(".warc.gz");
     }
 }
