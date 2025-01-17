@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { useToastStore } from '@/utils/helper';
 import { onMounted, ref } from 'vue';
+
+const toast = useToastStore();
 const visible = ref(false);
+const tabNum = ref(1);
 const title = ref();
 const visLocation = ref();
 const nodes = ref();
@@ -13,8 +17,32 @@ const icon = (data: any) => {
     }
 };
 
-const onClick = (data: any) => {
-    visLocation.value = '/tools/visualization.html?targetInstanceOid=' + data.tiId + '&harvestResultId=1&harvestNumber=1';
+const onInspect = async (data: any) => {
+    const params = 'targetInstanceOid=' + data.tiId + '&harvestResultId=1&harvestNumber=1';
+    const rspGlobalSetting = await fetch('/curator/get/global-settings?' + params);
+    if (!rspGlobalSetting.ok) {
+        toast.error('Failed to get the global settings.');
+        return;
+    }
+
+    const globalSettings = await rspGlobalSetting.json();
+    const currentVersion = globalSettings.currentVersion;
+    const globalVersion = globalSettings.globalVersion;
+    const retrieveResult = globalSettings.retrieveResult;
+    if (retrieveResult === '9') {
+        if (confirm('No index exists for this web harvest, click ok to generate the index.')) {
+            //If could not get the BDB version or the BDB does not exit, then prompt with users to confim redex.
+            const rspInitialIndex = await fetch('/curator/initial-wava-index?' + params);
+            if (!rspInitialIndex.ok) {
+                toast.error('Failed to initial the index.');
+                return;
+            }
+        } else {
+            return;
+        }
+    }
+
+    visLocation.value = '/tools/visualization.html?' + params;
     title.value = data.absolutePath;
     visible.value = false;
 };
@@ -43,32 +71,33 @@ onMounted(() => {
             <div style="font-size: 2rem">Click the &nbsp;<i class="pi pi-bars"></i>&nbsp; button on the top right to select a web harvest</div>
         </div>
     </div>
-    <Drawer v-model:visible="visible" header="Click the button to open a web harvest." class="!w-full md:!w-80 lg:!w-[50rem]" position="right">
-        <Tree :value="nodes" tableStyle="min-width: 100%">
-            <!-- <Column field="label" header="Name" expander style="width: 60%">
-                <template #body="slotProps">
-                    <span>{{ slotProps }}</span>
-                </template>
-            </Column>
-            <Column field="label" header="Name" expander style="width: 60%"></Column>
-            <Column field="label" header="Action" style="width: 30%">
-                <template #body>
-                    <div class="flex flex-wrap gap-2">
-                        <Button type="button" icon="pi pi-search" rounded />
-                        <Button type="button" icon="pi pi-pencil" rounded severity="success" />
-                    </div>
-                </template>
-            </Column> -->
-            <template #default="slotProps">
-                <span><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
-            </template>
-            <template #url="slotProps">
-                <a href="javascript: void(0)" @click="onClick(slotProps.node.data)">
-                    <span> <i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} <i class="pi pi-check">&nbsp;</i></span>
-                </a>
-            </template>
-        </Tree>
-    </Drawer>
+    <Dialog v-model:visible="visible" header="Click the button to open a web harvest." style="width: 60vw; max-height: 70vh">
+        <div v-if="tabNum == 1">
+            <TreeTable :value="nodes" tableStyle="min-width: 100%">
+                <Column header="Name" expander style="width: 100%">
+                    <template #body="slotProps">
+                        <span><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
+                    </template>
+                </Column>
+                <Column header="Action" style="width: 30%">
+                    <template #body="slotProps">
+                        <div class="flex flex-wrap gap-2">
+                            <Button v-if="slotProps.node.type === 'url'" type="button" icon="pi pi-eye" text @click="onInspect(slotProps.node.data)" />
+                        </div>
+                    </template>
+                </Column>
+            </TreeTable>
+        </div>
+        <div v-if="tabNum == 2">
+            <div class="flex justify-center items-center w-full h-full">
+                <span> No index exists for this web harvest, click ok to generate the index. </span>
+            </div>
+        </div>
+        <template #footer>
+            <Button v-if="tabNum == 2" label="Reindex" @click="visible = false" autofocus />
+            <Button label="Cancel" @click="visible = false" autofocus />
+        </template>
+    </Dialog>
 </template>
 
 <style>

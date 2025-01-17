@@ -629,7 +629,7 @@ to get the desired effect
 
     var timerProgress;
     function reindex(){
-      var reqUrl="/initial-wava-index?job=" + jobId + "&harvestResultNumber=" + harvestResultNumber;
+      var reqUrl="/initial-wava-index?targetInstanceOid=" + jobId + "&harvestResultId=" + harvestResultNumber+"&harvestNumber"+ harvestResultNumber;
       fetchHttp(reqUrl, null, function(response){
         console.log(response.rspCode + ': ' + response.rspMsg);
 
@@ -724,7 +724,8 @@ to get the desired effect
 
         initUI();
 
-        initGlobalSettings();
+        //initGlobalSettings();
+        initData();
     });
 </script>
 </body>
