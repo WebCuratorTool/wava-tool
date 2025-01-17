@@ -97,19 +97,24 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
                 return node;
             }
 
+            boolean hasWarcFiles = false;
             for (File f : children) {
+                if (this.isWarcFile(f.getName())) {
+                    hasWarcFiles = true;
+                }
                 WavaTreeNode childNode = this.treeHarvestResults(f);
                 if (childNode != null) {
                     childrenNodes.add(childNode);
                 }
             }
 
-            if (!childrenNodes.isEmpty()) {
-                node.setChildren(childrenNodes);
+            if (childrenNodes.isEmpty()) {
+                return null;
             }
 
-            List<File> warcFiles = PatchUtil.listWarcFiles(rootPath);
-            if (!warcFiles.isEmpty()) {
+            node.setChildren(childrenNodes);
+//            List<File> warcFiles = PatchUtil.listWarcFiles(rootPath);
+            if (hasWarcFiles) {
                 node.setType("url");
             }
 

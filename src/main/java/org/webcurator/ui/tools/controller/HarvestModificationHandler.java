@@ -19,9 +19,7 @@ import org.springframework.stereotype.Component;
 import org.webcurator.common.util.Utils;
 import org.webcurator.core.exceptions.DigitalAssetStoreException;
 import org.webcurator.core.harvester.coordinator.PatchingHarvestLogManager;
-import org.webcurator.core.visualization.VisualizationConstants;
-import org.webcurator.core.visualization.VisualizationDirectoryManager;
-import org.webcurator.core.visualization.VisualizationProcessorManager;
+import org.webcurator.core.visualization.*;
 import org.webcurator.core.visualization.modification.metadata.ModifyApplyCommand;
 import org.webcurator.core.visualization.modification.metadata.ModifyResult;
 import org.webcurator.core.visualization.modification.metadata.ModifyRowFullData;
@@ -49,6 +47,7 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Component("harvestModificationHandler")
@@ -472,5 +471,26 @@ public class HarvestModificationHandler {
             ret.setRspMsg(e.getMessage());
         }
         return ret;
+    }
+
+    public Double getIndexingProgress(long targetInstanceId, int harvestResultNumber) {
+        VisualizationProgressBar progressBar = visualizationProcessorManager.getProgress(targetInstanceId, harvestResultNumber);
+        if (progressBar == null) {
+            return null;
+        }
+
+        AtomicLong totMaxLength = new AtomicLong(0);
+        AtomicLong totCurLength = new AtomicLong(0);
+        Map<String, VisualizationProgressBar.ProgressItem> items=progressBar.getItems();
+        items.values().forEach(item -> {
+            totMaxLength.addAndGet(item.getMaxLength());
+            totCurLength.addAndGet(item.getCurLength());
+        });
+
+        if (totMaxLength.get() > 0) {
+            return 100.00 * totCurLength.get() / totMaxLength.get();
+        }
+
+        return -1.0;
     }
 }

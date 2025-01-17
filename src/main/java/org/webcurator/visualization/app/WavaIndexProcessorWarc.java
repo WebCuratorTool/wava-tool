@@ -62,7 +62,6 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
     public boolean process() {
         try {
             this.status = HarvestResult.STATUS_RUNNING;
-            updateHarvestResultStatus();
             processInternal();
             this.close();
             return true;
@@ -74,8 +73,6 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
             if (this.status == HarvestResult.STATUS_RUNNING) {
                 this.status = HarvestResult.STATUS_FINISHED;
             }
-            processorManager.finalise(this);
-
         }
     }
 
@@ -87,7 +84,6 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
     @Override
     public void processInternal() throws Exception {
         try {
-//            File directory = new File(this.baseDir, targetInstanceId + File.separator + harvestResultNumber);
             File directory = new File(this.dirMgmt.getAbsoluteSubHarvestResultFolder(this.targetInstanceId, this.harvestResultNumber));
             List<File> fileList = PatchUtil.listWarcFiles(directory);
             if (fileList.isEmpty()) {
@@ -99,7 +95,7 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
             VisualizationProgressBar.ProgressItem progressItemStat = progressBar.getProgressItem("STAT");
             for (File f : fileList) {
                 if (this.status == HarvestResult.STATUS_TERMINATED) {
-                    log.info("Terminated when indexing");
+                    log.info("Terminated when scanning, {}", f);
                     break;
                 }
 
@@ -116,7 +112,7 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
             log.debug(progressBar.toString());
             for (File f : fileList) {
                 if (this.status == HarvestResult.STATUS_TERMINATED) {
-                    log.info("Terminated when indexing");
+                    log.info("Terminated when indexing: {}", f);
                     break;
                 }
 

@@ -16,7 +16,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.webcurator.core.harvester.coordinator.PatchingHarvestLogManager;
 import org.webcurator.core.visualization.VisualizationDirectoryManager;
-import org.webcurator.core.visualization.VisualizationProcessorManager;
 import org.webcurator.core.visualization.networkmap.NetworkMapDomainSuffix;
 import org.webcurator.core.visualization.networkmap.bdb.BDBNetworkMapPool;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlDTO;
@@ -28,6 +27,7 @@ import org.webcurator.domain.model.core.HarvestResult;
 import org.webcurator.visualization.app.WavaBDBNetworkMapPool;
 import org.webcurator.visualization.app.WavaDirectoryManagement;
 import org.webcurator.core.coordinator.WctCoordinatorClient;
+import org.webcurator.visualization.app.WavaVisualizationProcessorManager;
 import org.webcurator.visualization.app.WavaWctCoordinatorClient;
 
 import javax.annotation.PostConstruct;
@@ -166,8 +166,8 @@ public class MainConfig {
 
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
-    public VisualizationProcessorManager visualizationProcessorQueue() {
-        return new VisualizationProcessorManager(visualizationDirectoryManager(), wctCoordinatorClient(), maxConcurrencyModThreads);
+    public WavaVisualizationProcessorManager visualizationProcessorManager() {
+        return new WavaVisualizationProcessorManager(visualizationDirectoryManager(), maxConcurrencyModThreads);
     }
 
     @SuppressWarnings("unchecked")
@@ -261,7 +261,7 @@ public class MainConfig {
     @Bean
     @Scope(BeanDefinition.SCOPE_SINGLETON)
     public NetworkMapClient networkMapLocalClient() {
-        return new NetworkMapClientLocal(bdbDatabasePool(), visualizationProcessorQueue());
+        return new NetworkMapClientLocal(bdbDatabasePool(), visualizationProcessorManager());
     }
 
 }

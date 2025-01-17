@@ -1,6 +1,8 @@
 package org.webcurator.ui.tools.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.webcurator.core.exceptions.DigitalAssetStoreException;
 import org.webcurator.core.visualization.VisualizationConstants;
@@ -77,8 +79,21 @@ public class HarvestModificationController implements ModifyService {
         return harvestModificationHandler.checkAndAppendModificationRows(targetInstanceId, harvestResultNumber, dataset);
     }
 
-    @RequestMapping(path = VisualizationConstants.ROOT_PATH+ "/initial-wava-index", method = {RequestMethod.POST, RequestMethod.GET})
-    public NetworkMapResult initialWavaIndex(@RequestParam("job") long targetInstanceId, @RequestParam("harvestResultNumber") int harvestResultNumber) {
+    @RequestMapping(path = VisualizationConstants.ROOT_PATH + "/initial-wava-index", method = {RequestMethod.POST, RequestMethod.GET})
+    public NetworkMapResult initialWavaIndex(@RequestParam("targetInstanceOid") long targetInstanceId, @RequestParam("harvestResultId") long harvestResultId, @RequestParam("harvestNumber") int harvestResultNumber) {
         return harvestModificationHandler.initialWavaIndex(targetInstanceId, harvestResultNumber);
+    }
+
+    @RequestMapping(path = VisualizationConstants.ROOT_PATH + "/get-wava-progress", method = {RequestMethod.POST, RequestMethod.GET})
+    public ResponseEntity<?> getIndexingProgress(@RequestParam("targetInstanceOid") long targetInstanceId, @RequestParam("harvestResultId") long harvestResultId, @RequestParam("harvestNumber") int harvestResultNumber) {
+        try {
+            Double percentage = harvestModificationHandler.getIndexingProgress(targetInstanceId, harvestResultNumber);
+            if (percentage == null || percentage < 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(String.format("There is no progress found to the target instance [%d]", targetInstanceId));
+            }
+            return ResponseEntity.ok().body(percentage);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
