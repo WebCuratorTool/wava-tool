@@ -114,3 +114,5 @@ export const useToastStore = defineStore('ToastStore', () => {
     };
     return { success, error, warn, info };
 });
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

@@ -49,6 +49,7 @@ declare module 'vue' {
     Password: typeof import('primevue/password')['default']
     Popover: typeof import('primevue/popover')['default']
     ProgressBar: typeof import('primevue/progressbar')['default']
+    ProgressSpinner: typeof import('primevue/progressspinner')['default']
     PropertyField: typeof import('./src/components/jobs/PropertyField.vue')['default']
     RawMaterialFlowSelectForm: typeof import('./src/components/settings/RawMaterialFlowSelectForm.vue')['default']
     RawProducerSelectForm: typeof import('./src/components/settings/RawProducerSelectForm.vue')['default']

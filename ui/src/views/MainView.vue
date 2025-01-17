@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useToastStore } from '@/utils/helper';
+import { sleep, useToastStore } from '@/utils/helper';
 import { onMounted, ref } from 'vue';
 
 const toast = useToastStore();
@@ -8,7 +8,8 @@ const tabNum = ref(1);
 const title = ref();
 const visLocation = ref();
 const nodes = ref();
-
+const selectedNodeData = ref();
+const progressValue = ref();
 const icon = (data: any) => {
     if (data.folder) {
         return 'pi pi-folder';
@@ -17,7 +18,37 @@ const icon = (data: any) => {
     }
 };
 
+const openDialog = () => {
+    visible.value = true;
+    tabNum.value = 1;
+};
+const initialIndex = async () => {
+    tabNum.value = 3;
+    const tiId = selectedNodeData.value.tiId;
+    const params = 'targetInstanceOid=' + tiId + '&harvestResultId=1&harvestNumber=1';
+    const rspInitialIndex = await fetch('/curator/initial-wava-index?' + params);
+    if (!rspInitialIndex.ok) {
+        toast.error('Failed to initial the index.');
+        return;
+    }
+
+    while (true) {
+        const rspProgress = await fetch('/curator/get-wava-progress?' + params);
+        if (!rspInitialIndex.ok) {
+            toast.error('Failed to fetch the progress.');
+            return;
+        }
+        const progress = await rspProgress.json();
+        progressValue.value = progress.progressPercentage;
+        if (progressValue.value >= 100) {
+            break;
+        }
+        await sleep(3000);
+    }
+};
+
 const onInspect = async (data: any) => {
+    selectedNodeData.value = data;
     const params = 'targetInstanceOid=' + data.tiId + '&harvestResultId=1&harvestNumber=1';
     const rspGlobalSetting = await fetch('/curator/get/global-settings?' + params);
     if (!rspGlobalSetting.ok) {
@@ -30,21 +61,22 @@ const onInspect = async (data: any) => {
     const globalVersion = globalSettings.globalVersion;
     const retrieveResult = globalSettings.retrieveResult;
     if (retrieveResult === '9') {
-        if (confirm('No index exists for this web harvest, click ok to generate the index.')) {
-            //If could not get the BDB version or the BDB does not exit, then prompt with users to confim redex.
-            const rspInitialIndex = await fetch('/curator/initial-wava-index?' + params);
-            if (!rspInitialIndex.ok) {
-                toast.error('Failed to initial the index.');
-                return;
-            }
-        } else {
-            return;
-        }
+        // if (confirm('No index exists for this web harvest, click ok to generate the index.')) {
+        //     //If could not get the BDB version or the BDB does not exit, then prompt with users to confim redex.
+        //     const rspInitialIndex = await fetch('/curator/initial-wava-index?' + params);
+        //     if (!rspInitialIndex.ok) {
+        //         toast.error('Failed to initial the index.');
+        //         return;
+        //     }
+        // } else {
+        //     return;
+        // }
+        tabNum.value = 2;
+    } else {
+        visLocation.value = '/tools/visualization.html?' + params;
+        title.value = data.absolutePath;
+        visible.value = false;
     }
-
-    visLocation.value = '/tools/visualization.html?' + params;
-    title.value = data.absolutePath;
-    visible.value = false;
 };
 
 onMounted(() => {
@@ -63,7 +95,7 @@ onMounted(() => {
     <Toast position="bottom-left"></Toast>
     <div class="flex items-center justify-between w-full topbar gap-4 p-2">
         <div class="text-lg" style="color: white">{{ title }}</div>
-        <Button icon="pi pi-bars" severity="warn" @click="visible = true" />
+        <Button icon="pi pi-bars" severity="warn" @click="openDialog" />
     </div>
     <div class="row-container">
         <iframe v-if="visLocation" :src="visLocation" class="full-screen"></iframe>
@@ -71,8 +103,8 @@ onMounted(() => {
             <div style="font-size: 2rem">Click the &nbsp;<i class="pi pi-bars"></i>&nbsp; button on the top right to select a web harvest</div>
         </div>
     </div>
-    <Dialog v-model:visible="visible" header="Click the button to open a web harvest." style="width: 60vw; max-height: 70vh">
-        <div v-if="tabNum == 1">
+    <Dialog v-model:visible="visible" header="Open a web harvest." style="width: 60vw">
+        <div v-if="tabNum == 1" class="tab-panel">
             <TreeTable :value="nodes" tableStyle="min-width: 100%">
                 <Column header="Name" expander style="width: 100%">
                     <template #body="slotProps">
@@ -88,22 +120,29 @@ onMounted(() => {
                 </Column>
             </TreeTable>
         </div>
-        <div v-if="tabNum == 2">
+        <div v-if="tabNum == 2" class="tab-panel">
             <div class="flex justify-center items-center w-full h-full">
-                <span> No index exists for this web harvest, click ok to generate the index. </span>
+                <span class="text-3xl"> No index exists for this web harvest, click "Reindex" to generate the index. </span>
+            </div>
+        </div>
+        <div v-if="tabNum == 3" class="tab-panel">
+            <div class="flex flex-col justify-center items-center w-full h-full">
+                <!-- <ProgressSpinner />
+                <span class="text-2xl"> {{}} </span> -->
+                <ProgressBar :value="progressValue"></ProgressBar>
             </div>
         </div>
         <template #footer>
-            <Button v-if="tabNum == 2" label="Reindex" @click="visible = false" autofocus />
+            <Button v-if="tabNum == 2" label="Reindex" @click="initialIndex()" autofocus />
             <Button label="Cancel" @click="visible = false" autofocus />
         </template>
     </Dialog>
 </template>
 
 <style>
-/* .p-treetable-table-container {
-    height: calc(100vh - 6rem);
-} */
+.tab-panel {
+    height: 60vh;
+}
 .topbar {
     position: fixed;
     width: 55vw;
