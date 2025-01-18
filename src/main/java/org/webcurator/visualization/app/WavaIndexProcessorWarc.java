@@ -142,6 +142,7 @@ public class WavaIndexProcessorWarc extends IndexProcessorWarc {
             this.urls.values().forEach(NetworkMapNodeUrlDTO::clear);
             this.urls.clear();
             this.pool.shutdownRepo(db);
+            log.info("Indexing end: {}", this.targetInstanceId);
         }
     }
 }

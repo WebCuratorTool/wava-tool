@@ -476,12 +476,13 @@ public class HarvestModificationHandler {
     public Double getIndexingProgress(long targetInstanceId, int harvestResultNumber) {
         VisualizationProgressBar progressBar = visualizationProcessorManager.getProgress(targetInstanceId, harvestResultNumber);
         if (progressBar == null) {
-            return null;
+            log.info("Not able to get progress: {}", targetInstanceId);
+            return 100.0;
         }
 
         AtomicLong totMaxLength = new AtomicLong(0);
         AtomicLong totCurLength = new AtomicLong(0);
-        Map<String, VisualizationProgressBar.ProgressItem> items=progressBar.getItems();
+        Map<String, VisualizationProgressBar.ProgressItem> items = progressBar.getItems();
         items.values().forEach(item -> {
             totMaxLength.addAndGet(item.getMaxLength());
             totCurLength.addAndGet(item.getCurLength());
@@ -491,6 +492,6 @@ public class HarvestModificationHandler {
             return 100.00 * totCurLength.get() / totMaxLength.get();
         }
 
-        return -1.0;
+        return 100.0;
     }
 }

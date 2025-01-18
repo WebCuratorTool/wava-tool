@@ -93,6 +93,7 @@ public class HarvestModificationController implements ModifyService {
             }
             return ResponseEntity.ok().body(percentage);
         } catch (Exception e) {
+            log.error("Failed to get progress: {}", targetInstanceId);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
