@@ -1,19 +1,32 @@
 <script setup lang="ts">
 import { sleep, useToastStore } from '@/utils/helper';
+import { useFullscreen } from '@vueuse/core';
 import { onMounted, ref } from 'vue';
 
 const toast = useToastStore();
+const inspectArea = ref();
+
+const { isFullscreen, enter, exit, toggle } = useFullscreen(inspectArea);
+
 const title = ref();
 const visLocation = ref();
 const nodes = ref();
 const selectedNodeData = ref();
 const isRunning = ref(false);
-const progressValue = ref('0.00');
+const progressValue = ref(0.0);
 const icon = (data: any) => {
     if (data.folder) {
         return 'pi pi-folder';
     } else {
         return 'pi pi-file-word';
+    }
+};
+
+const labelClass = (node: any) => {
+    if (node.type === 'url') {
+        return 'text-violet-700';
+    } else {
+        return 'text-slate-400';
     }
 };
 
@@ -72,40 +85,52 @@ onMounted(() => {
 
 <template>
     <Toast position="bottom-left"></Toast>
-    <Splitter style="height: 100vh">
-        <SplitterPanel class="flex flex-col" :size="25" style="overflow-y: auto">
-            <TreeTable :value="nodes" tableStyle="min-width: 100%">
-                <template #header>
-                    <div class="text-xl font-bold">Web Harvests</div>
+    <div class="flex">
+        <div class="flex flex-col gap-4 br-2" style="width: 25vw; height: 100vh; border-right: 1px solid">
+            <Toolbar>
+                <template #start>
+                    <span div class="text-xl font-bold">Web Harvests</span>
                 </template>
-                <Column header="Name" expander style="width: 100%">
-                    <template #body="slotProps">
-                        <span><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
-                    </template>
-                </Column>
-                <Column header="Action" style="width: 30%">
-                    <template #body="slotProps">
-                        <div class="flex flex-wrap gap-2">
-                            <Button v-if="slotProps.node.type === 'url'" severity="secondary" icon="pi pi-eye" @click="onInspect(slotProps.node.data)" />
-                        </div>
-                    </template>
-                </Column>
-            </TreeTable>
-        </SplitterPanel>
-        <SplitterPanel class="flex items-center justify-center" :size="75">
+            </Toolbar>
+            <div style="width: 100%; height: calc(100% - 4rem); overflow-y: auto">
+                <TreeTable :value="nodes" tableStyle="min-width: 100%">
+                    <Column header="Name" expander style="width: 100%">
+                        <template #body="slotProps">
+                            <span :class="labelClass(slotProps.node)"><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
+                        </template>
+                    </Column>
+                    <Column header="Action" style="width: 30%">
+                        <template #body="slotProps">
+                            <div class="flex flex-wrap gap-2">
+                                <Button v-if="slotProps.node.type === 'url'" icon="pi pi-arrow-up-right" @click="onInspect(slotProps.node.data)" />
+                            </div>
+                        </template>
+                    </Column>
+                </TreeTable>
+            </div>
+        </div>
+
+        <!-- <Divider layout="vertical" /> -->
+
+        <div class="flex items-center justify-center" style="width: 75vw; height: 100vh; overflow: hidden">
             <div v-if="isRunning" class="flex flex-col items-center justify-center">
                 <ProgressSpinner />
                 <span class="text-3xl">Indexing: {{ progressValue }}%</span>
             </div>
-            <div v-else class="row-container">
+            <div v-else ref="inspectArea" class="row-container">
+                <div v-if="!visLocation" class="flex items-center justify-center w-full h-full">
+                    <span class="text-3xl">No harvest selected!</span>
+                </div>
+                <div v-if="visLocation" class="flex items-center justify-end w-full gap-4 topbar">
+                    <div class="text-white">
+                        <label class="">{{ title }} </label>
+                    </div>
+
+                    <Button icon="pi pi-expand" severity="contrast" @click="toggle" />
+                </div>
                 <iframe :src="visLocation" class="full-screen"></iframe>
             </div>
-        </SplitterPanel>
-    </Splitter>
-
-    <div class="flex items-center justify-end w-full topbar gap-4 p-2">
-        <div class="text-lg" style="color: white">{{ title }}</div>
-        <!-- <Button icon="pi pi-bars" severity="warn" @click="openDialog" /> -->
+        </div>
     </div>
 </template>
 
@@ -114,14 +139,15 @@ onMounted(() => {
     height: 60vh;
 }
 .topbar {
-    position: fixed;
-    width: 45vw;
+    position: absolute;
+    width: 50vw;
     top: 0;
     right: 0;
+    padding: 6px;
 }
 .row-container {
     display: flex;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     flex-direction: column;
     overflow: hidden;
