@@ -24,7 +24,7 @@ public class VisServiceController {
     final private AtomicLong hrOid = new AtomicLong(0);
 
     @RequestMapping(path = "/curator/vis/all_hr_results", method = {RequestMethod.POST, RequestMethod.GET})
-    public List<WavaTreeNode> getAllHarvestResults() {
-        return ((WavaDirectoryManagement) dirMgmt).treeHarvestResults().getChildren();
+    public WavaTreeNode getAllHarvestResults() {
+        return ((WavaDirectoryManagement) dirMgmt).treeHarvestResults();
     }
 }

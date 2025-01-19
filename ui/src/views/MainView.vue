@@ -11,6 +11,7 @@ const { isFullscreen, enter, exit, toggle } = useFullscreen(inspectArea);
 const title = ref();
 const visLocation = ref();
 const nodes = ref();
+const rootPath = ref();
 const selectedNodeData = ref();
 const isRunning = ref(false);
 const progressValue = ref(0.0);
@@ -77,7 +78,8 @@ onMounted(() => {
             return rsp.json();
         })
         .then((datasets: any) => {
-            nodes.value = datasets;
+            nodes.value = datasets.children;
+            rootPath.value = datasets.data.label;
             console.log(datasets);
         });
 });
@@ -89,7 +91,7 @@ onMounted(() => {
         <div class="flex flex-col gap-4 br-2" style="width: 25vw; height: 100vh; border-right: 1px solid">
             <Toolbar>
                 <template #start>
-                    <span div class="text-xl font-bold">Web Harvests</span>
+                    <span div class="text-xl font-bold">Web Harvests: {{ rootPath }}</span>
                 </template>
             </Toolbar>
             <div style="width: 100%; height: calc(100% - 4rem); overflow-y: auto">
