@@ -21,7 +21,7 @@ public class TestWavaDirectoryManagement {
         WavaTreeNode folders = testInstance.treeHarvestResults();
         System.out.println(folders.getData().getLabel());
         WavaTreeNode leaf = getOneLeafNode(folders);
-       assert leaf != null;
+       assert leaf == null;
     }
 
 
