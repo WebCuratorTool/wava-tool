@@ -29,7 +29,6 @@ import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlDT
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapResult;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlEntity;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapUrlCommand;
-import org.webcurator.core.visualization.networkmap.processor.IndexProcessor;
 import org.webcurator.core.visualization.networkmap.service.NetworkMapClient;
 import org.webcurator.domain.model.core.HarvestResult;
 import org.webcurator.domain.model.core.HarvestResultDTO;
@@ -89,7 +88,7 @@ public class HarvestModificationHandler {
         return new ArrayList<HarvestResultDTO>();
     }
 
-    private Map<String, Boolean> getIndexedUrlNodes(long targetInstanceId, int harvestResultNumber, ModifyApplyCommand cmd) throws IOException {
+    public Map<String, Boolean> getIndexedUrlNodes(long targetInstanceId, int harvestResultNumber, ModifyApplyCommand cmd) throws IOException {
         Map<String, Boolean> mapIndexedUrlNodes = new HashMap<>();
 
         List<String> listQueryUrlStatus = cmd.getDataset().stream().map(ModifyRowFullData::getUrl).collect(Collectors.toList());
@@ -108,7 +107,7 @@ public class HarvestModificationHandler {
         return mapIndexedUrlNodes;
     }
 
-    private void appendIndexedResult(Map<String, Boolean> mapIndexedUrlNodes, Map<String, ModifyRowFullData> mapTargetUrlNodes) {
+    public void appendIndexedResult(Map<String, Boolean> mapIndexedUrlNodes, Map<String, ModifyRowFullData> mapTargetUrlNodes) {
         mapTargetUrlNodes.forEach((k, v) -> {
             if (mapIndexedUrlNodes.containsKey(k)) {
                 v.setRespCode(VisualizationConstants.RESP_CODE_SUCCESS);
@@ -129,7 +128,7 @@ public class HarvestModificationHandler {
         return new String(Base64.getEncoder().encode(digest));
     }
 
-    private void putDataWithDigest(String key, Object data, Map<String, Object> result) throws JsonProcessingException, NoSuchAlgorithmException {
+    public void putDataWithDigest(String key, Object data, Map<String, Object> result) throws JsonProcessingException, NoSuchAlgorithmException {
         String digest = getDigest(data);
         Map<String, Object> pair = new HashMap<>();
         pair.put("digest", digest);
@@ -200,6 +199,7 @@ public class HarvestModificationHandler {
 
         NetworkMapResult result = NetworkMapResult.getSuccessResult();
         result.setPayload(networkMapClient.obj2Json(importFileRows));
+        workbook.close();
         return result;
     }
 

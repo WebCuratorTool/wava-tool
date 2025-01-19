@@ -63,6 +63,7 @@ public class WavaDirectoryManagement extends VisualizationDirectoryManager {
         if (this.baseWarcFolderNode == null) {
             this.baseWarcFolderNode = new WavaTreeNode();
             this.baseWarcFolderNode.setChildren(new ArrayList<>());
+            this.baseWarcFolderNode.setData(new WavaTreeDataNode());
         }
         this.baseWarcFolderNode.getData().setLabel(this.getBaseDir());
 

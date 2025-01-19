@@ -19,9 +19,9 @@ public class TestWavaDirectoryManagement {
         String baseDir = "/usr/local/wct/store";
         WavaDirectoryManagement testInstance = new WavaDirectoryManagement(baseDir, baseLogDir, baseReportDir);
         WavaTreeNode folders = testInstance.treeHarvestResults();
-        System.out.println(folders.getLabel());
+        System.out.println(folders.getData().getLabel());
         WavaTreeNode leaf = getOneLeafNode(folders);
-//        assert leaf != null;
+       assert leaf != null;
     }
 
 
@@ -42,7 +42,7 @@ public class TestWavaDirectoryManagement {
         WavaDirectoryManagement testInstance = new WavaDirectoryManagement(baseDir, baseLogDir, baseReportDir);
 
         WavaTreeNode folders = testInstance.treeHarvestResults();
-        System.out.println(folders.getLabel());
+        System.out.println(folders.getData().getLabel());
 
         walkNodes(testInstance, folders);
     }
@@ -58,7 +58,7 @@ public class TestWavaDirectoryManagement {
     }
 
     private WavaTreeNode getOneLeafNode(WavaTreeNode node) {
-        if (!node.isFolder()) {
+        if (!node.getData().isFolder()) {
             return node;
         }
 
@@ -73,10 +73,10 @@ public class TestWavaDirectoryManagement {
             return;
         }
 
-        if (!node.isFolder()) {
-            File hrPath = new File(testInstance.getAbsoluteSubHarvestResultFolder(node.getTiId(), node.getHrNum()));
+        if (!node.getData().isFolder()) {
+            File hrPath = new File(testInstance.getAbsoluteSubHarvestResultFolder(node.getData().getTiId(), node.getData().getHrNum()));
             assert hrPath != null;
-            assert hrPath.getAbsolutePath().equalsIgnoreCase(node.getAbsolutePath());
+            assert hrPath.getAbsolutePath().equalsIgnoreCase(node.getData().getAbsolutePath());
             System.out.println("BaseDir:" + testInstance.getBaseDir() + ", HarvestResult Path:" + hrPath.getAbsolutePath());
             return;
         }
