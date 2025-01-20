@@ -19,11 +19,12 @@ import org.springframework.stereotype.Component;
 import org.webcurator.common.util.Utils;
 import org.webcurator.core.exceptions.DigitalAssetStoreException;
 import org.webcurator.core.harvester.coordinator.PatchingHarvestLogManager;
-import org.webcurator.core.visualization.VisualizationConstants;
-import org.webcurator.core.visualization.VisualizationDirectoryManager;
+import org.webcurator.core.visualization.*;
 import org.webcurator.core.visualization.modification.metadata.ModifyApplyCommand;
 import org.webcurator.core.visualization.modification.metadata.ModifyResult;
 import org.webcurator.core.visualization.modification.metadata.ModifyRowFullData;
+import org.webcurator.core.visualization.networkmap.bdb.BDBNetworkMapPool;
+import org.webcurator.core.visualization.networkmap.metadata.NetworkDbVersionDTO;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlDTO;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapResult;
 import org.webcurator.core.visualization.networkmap.metadata.NetworkMapNodeUrlEntity;
@@ -31,6 +32,8 @@ import org.webcurator.core.visualization.networkmap.metadata.NetworkMapUrlComman
 import org.webcurator.core.visualization.networkmap.service.NetworkMapClient;
 import org.webcurator.domain.model.core.HarvestResult;
 import org.webcurator.domain.model.core.HarvestResultDTO;
+import org.webcurator.visualization.app.WavaDirectoryManagement;
+import org.webcurator.visualization.app.WavaIndexProcessorWarc;
 
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +46,7 @@ import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Component("harvestModificationHandler")
@@ -68,14 +72,23 @@ public class HarvestModificationHandler {
     @Autowired
     private VisualizationDirectoryManager directoryManager;
 
+    @Autowired
+    private VisualizationProcessorManager visualizationProcessorManager;
+
+    @Autowired
+    private BDBNetworkMapPool dbPool;
+
     @Value("${qualityReviewToolController.archiveUrl}")
     private String openWayBack;
+
+    @Value("${qualityReviewToolController.archiveUrl}")
+    private String archiveUrl;
 
     public List<HarvestResultDTO> getDerivedHarvestResults(long targetInstanceId, long harvestResultId, int harvestResultNumber) {
         return new ArrayList<HarvestResultDTO>();
     }
 
-    private Map<String, Boolean> getIndexedUrlNodes(long targetInstanceId, int harvestResultNumber, ModifyApplyCommand cmd) throws IOException {
+    public Map<String, Boolean> getIndexedUrlNodes(long targetInstanceId, int harvestResultNumber, ModifyApplyCommand cmd) throws IOException {
         Map<String, Boolean> mapIndexedUrlNodes = new HashMap<>();
 
         List<String> listQueryUrlStatus = cmd.getDataset().stream().map(ModifyRowFullData::getUrl).collect(Collectors.toList());
@@ -94,7 +107,7 @@ public class HarvestModificationHandler {
         return mapIndexedUrlNodes;
     }
 
-    private void appendIndexedResult(Map<String, Boolean> mapIndexedUrlNodes, Map<String, ModifyRowFullData> mapTargetUrlNodes) {
+    public void appendIndexedResult(Map<String, Boolean> mapIndexedUrlNodes, Map<String, ModifyRowFullData> mapTargetUrlNodes) {
         mapTargetUrlNodes.forEach((k, v) -> {
             if (mapIndexedUrlNodes.containsKey(k)) {
                 v.setRespCode(VisualizationConstants.RESP_CODE_SUCCESS);
@@ -115,13 +128,26 @@ public class HarvestModificationHandler {
         return new String(Base64.getEncoder().encode(digest));
     }
 
-    private void putDataWithDigest(String key, Object data, Map<String, Object> result) throws JsonProcessingException, NoSuchAlgorithmException {
+    public void putDataWithDigest(String key, Object data, Map<String, Object> result) throws JsonProcessingException, NoSuchAlgorithmException {
         String digest = getDigest(data);
         Map<String, Object> pair = new HashMap<>();
         pair.put("digest", digest);
         pair.put("data", data);
 
         result.put(key, pair);
+    }
+
+    public Map<String, String> getGlobalSettings(long targetInstanceId, long harvestResultId, int harvestResultNumber) {
+        NetworkMapResult resultDbVersion = networkMapClient.getDbVersion(targetInstanceId, harvestResultNumber);
+        NetworkDbVersionDTO versionDTO = networkMapClient.getDbVersionDTO(resultDbVersion.getPayload());
+        Map<String, String> map = new HashMap<>();
+        map.put("retrieveResult", Integer.toString(versionDTO.getRetrieveResult()));
+        map.put("globalVersion", versionDTO.getGlobalVersion());
+        map.put("currentVersion", versionDTO.getCurrentVersion());
+        map.put("archiveUrl", archiveUrl);
+//        HarvestResult harvestResult = targetInstanceDAO.getHarvestResult(harvestResultId);
+//        map.put("accessToolUrl", harvestResourceUrlMapper.generateUrl(harvestResult));
+        return map;
     }
 
     public NetworkMapResult bulkImportParse(long targetInstanceId, int harvestResultNumber, ModifyRowFullData cmd) throws IOException, DigitalAssetStoreException {
@@ -173,6 +199,7 @@ public class HarvestModificationHandler {
 
         NetworkMapResult result = NetworkMapResult.getSuccessResult();
         result.setPayload(networkMapClient.obj2Json(importFileRows));
+        workbook.close();
         return result;
     }
 
@@ -431,5 +458,40 @@ public class HarvestModificationHandler {
         }
 
         return result;
+    }
+
+    public NetworkMapResult initialWavaIndex(long targetInstanceId, int harvestResultNumber) {
+        NetworkMapResult ret = NetworkMapResult.getSuccessResult();
+        try {
+            WavaIndexProcessorWarc indexer = new WavaIndexProcessorWarc(dbPool, targetInstanceId, harvestResultNumber, (WavaDirectoryManagement) directoryManager, networkMapClient);
+//            indexer.processInternal();
+            visualizationProcessorManager.startTask(indexer);
+        } catch (Exception e) {
+            ret.setRspCode(500);
+            ret.setRspMsg(e.getMessage());
+        }
+        return ret;
+    }
+
+    public Double getIndexingProgress(long targetInstanceId, int harvestResultNumber) {
+        VisualizationProgressBar progressBar = visualizationProcessorManager.getProgress(targetInstanceId, harvestResultNumber);
+        if (progressBar == null) {
+            log.info("Not able to get progress: {}", targetInstanceId);
+            return 100.0;
+        }
+
+        AtomicLong totMaxLength = new AtomicLong(0);
+        AtomicLong totCurLength = new AtomicLong(0);
+        Map<String, VisualizationProgressBar.ProgressItem> items = progressBar.getItems();
+        items.values().forEach(item -> {
+            totMaxLength.addAndGet(item.getMaxLength());
+            totCurLength.addAndGet(item.getCurLength());
+        });
+
+        if (totMaxLength.get() > 0) {
+            return 100.00 * totCurLength.get() / totMaxLength.get();
+        }
+
+        return 100.0;
     }
 }
