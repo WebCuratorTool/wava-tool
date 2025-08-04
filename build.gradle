@@ -1,8 +1,9 @@
 plugins {
-    id 'java'
+    id 'application'
     id 'maven-publish'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'org.springframework.boot' version '2.5.12'
-    id 'war'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 }
 
 repositories {
@@ -10,11 +11,18 @@ repositories {
     mavenCentral()
 }
 
-apply plugin: 'war'
+apply plugin: 'org.springframework.boot'
 
+def javafxVersion = '17.0.16'
 dependencies {
     implementation 'org.webcurator:webcurator-core:3.2.1'
     implementation 'org.apache.poi:poi-ooxml:5.0.0'
+    implementation "org.openjfx:javafx-controls:$javafxVersion"
+    implementation "org.openjfx:javafx-graphics:$javafxVersion:win"
+    implementation "org.openjfx:javafx-base:$javafxVersion:win"
+    implementation "org.openjfx:javafx-web:$javafxVersion:win"
+    implementation 'org.eclipse.jetty:jetty-server:11.0.14'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.14'
     testImplementation 'junit:junit:4.13.1'
     testImplementation 'org.mockito:mockito-core:3.2.4'
     testImplementation 'org.powermock:powermock-module-junit4:1.5.1'
@@ -23,7 +31,7 @@ dependencies {
 group = 'org.webcurator'
 version = '1.1'
 description = 'Web Curator Tool Visualization'
-sourceCompatibility = '1.8'
+sourceCompatibility = '1.17'
 
 tasks.register('sourcesJar', Jar) {
     archiveClassifier.set('sources')
@@ -79,14 +87,6 @@ tasks.register('copyUI', Copy) {
     }
 }
 
-bootWar {
-    dependsOn tasks.copyUI
-}
-
-war {
-    dependsOn tasks.copyUI
-}
-
 bootRun {
     dependsOn tasks.copyUI
 }
@@ -97,4 +97,17 @@ clean {
 
 build {
     dependsOn tasks.copyUI
+}
+
+javafx {
+    version = "17"
+    modules = [ 'javafx.controls', 'javafx.web' ]
+}
+
+application {
+    mainClass = 'com.ndha.wava.MainApp'
+    applicationDefaultJvmArgs = [
+            "--module-path", "${System.getProperty('java.home')}/lib",
+            "--add-modules", "javafx.controls,javafx.web"
+    ]
 }
