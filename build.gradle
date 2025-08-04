@@ -15,7 +15,7 @@ apply plugin: 'org.springframework.boot'
 
 def javafxVersion = '17.0.16'
 dependencies {
-    implementation 'org.webcurator:webcurator-core:3.2.1'
+    implementation 'org.webcurator:webcurator-core:3.3.0-SNAPSHOT'
     implementation 'org.apache.poi:poi-ooxml:5.0.0'
     implementation "org.openjfx:javafx-controls:$javafxVersion"
     implementation "org.openjfx:javafx-graphics:$javafxVersion:win"
@@ -105,7 +105,7 @@ javafx {
 }
 
 application {
-    mainClass = 'com.ndha.wava.MainApp'
+    mainClass = 'org.webcurator.visualization.springboot.MainApp'
     applicationDefaultJvmArgs = [
             "--module-path", "${System.getProperty('java.home')}/lib",
             "--add-modules", "javafx.controls,javafx.web"

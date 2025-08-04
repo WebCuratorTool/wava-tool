@@ -21,26 +21,29 @@ import java.util.Arrays;
         excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
                 classes = {HarvestAgentListenerService.class, WctCoordinator.class})
 )
-public class MainApplication {
-    public static void main(String[] args) {
-        try {
-            SpringApplication.run(MainApplication.class, args);
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Bean
-    public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
-        return args -> {
-            // Note that this is just here for debugging purposes. It can be deleted at any time.
-            System.out.println("Let's inspect the beans provided by Spring Boot:");
-
-            String[] beanNames = ctx.getBeanDefinitionNames();
-            Arrays.sort(beanNames);
-            for (String beanName : beanNames) {
-                System.out.println(beanName);
-            }
-        };
+public class ApiApp {
+    //    public static void main(String[] args) {
+//        try {
+//            SpringApplication.run(ApiApp.class, args);
+//        } catch (RuntimeException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    @Bean
+//    public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
+//        return args -> {
+//            // Note that this is just here for debugging purposes. It can be deleted at any time.
+//            System.out.println("Let's inspect the beans provided by Spring Boot:");
+//
+//            String[] beanNames = ctx.getBeanDefinitionNames();
+//            Arrays.sort(beanNames);
+//            for (String beanName : beanNames) {
+//                System.out.println(beanName);
+//            }
+//        };
+//    }
+    public static void run(String[] args) {
+        SpringApplication.run(ApiApp.class, args);
     }
 }
