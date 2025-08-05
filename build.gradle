@@ -4,6 +4,7 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.1.0'
     id 'org.springframework.boot' version '2.5.12'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'org.beryx.jlink' version '2.26.0'
 }
 
 repositories {
@@ -110,4 +111,20 @@ application {
             "--module-path", "${System.getProperty('java.home')}/lib",
             "--add-modules", "javafx.controls,javafx.web"
     ]
+}
+
+jlink {
+    imageName = 'wava'
+    launcher {
+        name = 'wava'
+    }
+    jpackage {
+        type = 'deb'
+        installerName = 'wava'
+        appVersion = '1.0.0'
+        linuxOptions = [
+                "--icon", "src/main/resources/app-icon.png",
+                "--linux-shortcut"
+        ]
+    }
 }
