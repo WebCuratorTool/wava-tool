@@ -16,7 +16,7 @@ apply plugin: 'org.springframework.boot'
 
 def javafxVersion = '17.0.16'
 dependencies {
-    implementation 'org.webcurator:webcurator-core:3.3.0-SNAPSHOT'
+    implementation 'org.webcurator:webcurator-core:3.2.4-SNAPSHOT'
     implementation 'org.apache.poi:poi-ooxml:5.0.0'
     implementation "org.openjfx:javafx-controls:$javafxVersion"
     implementation "org.openjfx:javafx-graphics:$javafxVersion:win"
@@ -107,24 +107,30 @@ javafx {
 
 application {
     mainClass = 'org.webcurator.visualization.springboot.MainApp'
-    applicationDefaultJvmArgs = [
-            "--module-path", "${System.getProperty('java.home')}/lib",
-            "--add-modules", "javafx.controls,javafx.web"
-    ]
 }
 
-jlink {
-    imageName = 'wava'
-    launcher {
-        name = 'wava'
-    }
-    jpackage {
-        type = 'deb'
-        installerName = 'wava'
-        appVersion = '1.0.0'
-        linuxOptions = [
-                "--icon", "src/main/resources/app-icon.png",
-                "--linux-shortcut"
-        ]
-    }
+tasks.register('jpackageWin', Exec) {
+    group = "build"
+    description = "Package as Windows EXE"
+    commandLine 'jpackage',
+            '--type', 'exe',
+            '--input', 'build/libs',
+            '--name', 'wava',
+            '--main-jar', 'wava-tool-1.1.jar',
+            '--main-class', 'org.webcurator.visualization.springboot.MainApp',
+            '--dest', 'build/dist',
+            '--win-shortcut'
+}
+
+tasks.register('jpackageDeb', Exec) {
+    group = "build"
+    description = "Package as Debian DEB"
+    commandLine 'jpackage',
+            '--type', 'deb',
+            '--input', 'build/libs',
+            '--name', 'wava',
+            '--main-jar', 'wava-tool-1.1.jar',
+            '--main-class', 'org.webcurator.visualization.springboot.MainApp',
+            '--dest', 'build/dist',
+            '--install-dir', '/opt/wava'
 }

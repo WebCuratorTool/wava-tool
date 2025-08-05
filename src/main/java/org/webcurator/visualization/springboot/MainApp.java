@@ -7,7 +7,6 @@ import javafx.scene.web.WebView;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Socket;
@@ -23,19 +22,19 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws MalformedURLException {
         WebView webView = new WebView();
-//        URL url = getClass().getResource("/index.html");
-//        if (url == null) {
-//            System.err.println("index.html not found");
-//            System.exit(1);
-//        }
+        // URL url = getClass().getResource("/index.html");
+        // if (url == null) {
+        // System.err.println("index.html not found");
+        // System.exit(1);
+        // }
 
         URL url = new URL("http://localhost:8080");
         webView.getEngine().load(url.toExternalForm());
 
         stage.setTitle("WAVA");
         stage.setScene(new Scene(webView));
-//        stage.setFullScreen(true);
-//        stage.show();
+        // stage.setFullScreen(true);
+        // stage.show();
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
         stage.setX(screenBounds.getMinX());
         stage.setY(screenBounds.getMinY());
@@ -46,7 +45,7 @@ public class MainApp extends Application {
     }
 
     private static void startRestApiServer() {
-        new Thread(() -> ApiApp.run(new String[]{})).start();
+        new Thread(() -> ApiApp.run(new String[] {})).start();
     }
 
     private static void waitForServer(int port, int timeoutMillis) {
