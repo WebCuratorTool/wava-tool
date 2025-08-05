@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+        "type": "java",
+        "name": "MainApp",
+        "request": "launch",
+        "mainClass": "org.webcurator.visualization.springboot.MainApp",
+        "projectName": ""
+    },
+    {
+        "type": "java",
+        "name": "Debug (Launch Main)",
+        "request": "launch",
+        "mainClass": "org.webcurator.visualization.springboot.MainApp",
+        "projectName": "wava-tool"
+    }
+]
+}
