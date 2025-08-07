@@ -1,5 +1,15 @@
 {
   "editor.formatOnSave": true,
   "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
-  "java.format.settings.profile": "GoogleStyle"
+  "java.format.settings.profile": "GoogleStyle",
+  "java.completion.importOrder": ["java", "javax", "org", "com"],
+  "java.completion.enabled": true,
+  "java.completion.favoriteStaticMembers": [
+    "java.util.Objects.requireNonNull",
+    "java.util.stream.Collectors.toList"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "java.configuration.updateBuildConfiguration": "disabled"
 }

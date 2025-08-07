@@ -1,17 +1,26 @@
 package org.webcurator.visualization.springboot;
 
-import javafx.application.Application;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Scene;
-import javafx.scene.web.WebView;
-import javafx.stage.Screen;
-import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Socket;
-import java.net.URL;
+
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Separator;
+import javafx.scene.control.ToolBar;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.web.WebView;
+import javafx.stage.FileChooser;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
 
 public class MainApp extends Application {
     private final WebView webView = new WebView();
@@ -52,7 +61,7 @@ public class MainApp extends Application {
             }
         });
 
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1920, 1080);
         stage.setScene(scene);
 
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
@@ -84,5 +93,36 @@ public class MainApp extends Application {
                 }
             }
         }
+    }
+
+    private void processFile(File file) {
+        spinner.setVisible(true);
+        webView.setVisible(false);
+
+        Task<Void> task = new Task<>() {
+            @Override
+            protected Void call() {
+                try {
+                    Thread.sleep(3000); // Simulate processing
+                } catch (InterruptedException ignored) {
+                }
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    spinner.setVisible(false);
+                    // webView.getEngine().loadContent("<html><body><h2>Processed: " +
+                    // file.getName() + "</h2></body></html>");
+                    // URL url = getClass().getResource("/web/index.html");
+                    webView.getEngine().load("http://localhost:8080");
+                    spinner.setVisible(false);
+                    webView.setVisible(true);
+                });
+            }
+        };
+
+        new Thread(task).start();
     }
 }
