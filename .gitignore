@@ -75,3 +75,5 @@ local.properties
 /src/main/webapp/
 .vite
 
+__pycache__
+.venv
