@@ -1,5 +1,6 @@
 package org.webcurator.visualization.springboot;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,11 +23,17 @@ import java.util.Arrays;
                 classes = {HarvestAgentListenerService.class, WctCoordinator.class})
 )
 public class MainApplication {
+    @Value("${arcDigitalAssetStoreService.baseDir}")
+    private String arcDigitalAssetStoreServiceBaseDir;
+
+    @Value("${server.port}")
+    private Integer serverPort;
+
     public static void main(String[] args) {
         try {
             SpringApplication.run(MainApplication.class, args);
         } catch (RuntimeException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 
@@ -41,6 +48,12 @@ public class MainApplication {
             for (String beanName : beanNames) {
                 System.out.println(beanName);
             }
+
+            System.out.println("==========================WAVA Tool Launched==================================");
+            System.out.println("The web harvest folder: " + arcDigitalAssetStoreServiceBaseDir);
+            System.out.println("The server port: " + serverPort);
+            System.out.println("==============================================================================");
+            System.out.println();
         };
     }
 }

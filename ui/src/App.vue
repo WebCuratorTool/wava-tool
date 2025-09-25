@@ -2,7 +2,7 @@
 import { togglePreset, toggleThemeMode } from '@/utils/themes';
 import { RouterView } from 'vue-router';
 
-toggleThemeMode('light');
+toggleThemeMode('dark');
 togglePreset('indigo');
 </script>
 

@@ -7,6 +7,7 @@ const toast = useToastStore();
 const inspectArea = ref();
 
 const { isFullscreen, enter, exit, toggle } = useFullscreen(inspectArea);
+const visible = ref(false);
 
 const title = ref();
 const visLocation = ref();
@@ -25,9 +26,9 @@ const icon = (data: any) => {
 
 const labelClass = (node: any) => {
     if (node.type === 'url') {
-        return 'text-violet-700';
+        return 'text-slate-300';
     } else {
-        return 'text-slate-400';
+        return 'text-slate-600';
     }
 };
 
@@ -87,34 +88,37 @@ onMounted(() => {
 
 <template>
     <Toast position="bottom-left"></Toast>
-    <div class="flex">
-        <div class="flex flex-col gap-4 br-2" style="width: 25vw; height: 100vh; border-right: 1px solid">
-            <Toolbar>
-                <template #start>
-                    <span div class="text-xl font-bold">Web Harvests: {{ rootPath }}</span>
+    <div class="flex justify-between w-full h-full">
+        <div class="flex justify-between h-full">
+            <Panel v-show="visible" style="height: 100vh">
+                <template #header>
+                    <span>Web Harvests: {{ rootPath }}</span>
                 </template>
-            </Toolbar>
-            <div style="width: 100%; height: calc(100% - 4rem); overflow-y: auto">
-                <TreeTable :value="nodes" tableStyle="min-width: 100%">
-                    <Column header="Name" expander style="width: 100%">
-                        <template #body="slotProps">
-                            <span :class="labelClass(slotProps.node)"><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
-                        </template>
-                    </Column>
-                    <Column header="Action" style="width: 30%">
-                        <template #body="slotProps">
-                            <div class="flex flex-wrap gap-2">
-                                <Button v-if="slotProps.node.type === 'url'" icon="pi pi-arrow-up-right" @click="onInspect(slotProps.node.data)" />
-                            </div>
-                        </template>
-                    </Column>
-                </TreeTable>
-            </div>
+                <template #icons>
+                    <Button @click="visible = false" icon="pi pi-times" size="small" severity="contrast" rounded />
+                </template>
+                <div style="width: 100%; height: calc(100% - 4rem); overflow-y: auto">
+                    <TreeTable :value="nodes" tableStyle="min-width: 100%">
+                        <Column header="Name" expander style="width: 100%">
+                            <template #body="slotProps">
+                                <span :class="labelClass(slotProps.node)"><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
+                            </template>
+                        </Column>
+                        <Column header="Action" style="width: 30%">
+                            <template #body="slotProps">
+                                <div class="flex flex-wrap gap-2">
+                                    <Button v-if="slotProps.node.type === 'url'" icon="pi pi-window-maximize" @click="onInspect(slotProps.node.data)" text raised />
+                                </div>
+                            </template>
+                        </Column>
+                    </TreeTable>
+                </div>
+            </Panel>
+            <Button v-show="!visible" icon="pi pi-angle-right" @click="visible = true" style="width: 1rem; height: 100vh; border-radius: 0" severity="contrast" />
         </div>
-
         <!-- <Divider layout="vertical" /> -->
 
-        <div class="flex items-center justify-center" style="width: 75vw; height: 100vh; overflow: hidden">
+        <div class="flex items-center justify-center w-full" style="height: 100vh; overflow: hidden">
             <div v-if="isRunning" class="flex flex-col items-center justify-center">
                 <ProgressSpinner />
                 <span class="text-3xl">Indexing: {{ progressValue }}%</span>
@@ -128,9 +132,9 @@ onMounted(() => {
                         <label class="">{{ title }} </label>
                     </div>
 
-                    <Button icon="pi pi-expand" severity="contrast" @click="toggle" />
+                    <Button icon="pi pi-expand" severity="contrast" @click="toggle" text />
                 </div>
-                <iframe :src="visLocation" class="full-screen"></iframe>
+                <iframe v-if="visLocation" :src="visLocation" class="full-screen"></iframe>
             </div>
         </div>
     </div>
