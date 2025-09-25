@@ -7,7 +7,7 @@ const toast = useToastStore();
 const inspectArea = ref();
 
 const { isFullscreen, enter, exit, toggle } = useFullscreen(inspectArea);
-const visible = ref(false);
+const visible = ref(true);
 
 const title = ref();
 const visLocation = ref();
@@ -88,17 +88,17 @@ onMounted(() => {
 
 <template>
     <Toast position="bottom-left"></Toast>
-    <div class="flex justify-between w-full h-full">
+    <div class="flex justify-between w-full h-full" style="overflow: hidden">
         <div class="flex justify-between h-full">
-            <Panel v-show="visible" style="height: 100vh">
+            <Panel v-show="visible" style="height: 100vh; max-width: 35rem">
                 <template #header>
                     <span>Web Harvests: {{ rootPath }}</span>
                 </template>
                 <template #icons>
                     <Button @click="visible = false" icon="pi pi-times" size="small" severity="contrast" rounded />
                 </template>
-                <div style="width: 100%; height: calc(100% - 4rem); overflow-y: auto">
-                    <TreeTable :value="nodes" tableStyle="min-width: 100%">
+                <div style="width: 100%; height: calc(100vh - 5rem); overflow-y: auto">
+                    <TreeTable :value="nodes" tableStyle="width: 100%" class="mt-2">
                         <Column header="Name" expander style="width: 100%">
                             <template #body="slotProps">
                                 <span :class="labelClass(slotProps.node)"><i :class="icon(slotProps.node.data)">&nbsp;</i> {{ slotProps.node.data.label }} </span>
