@@ -1,12 +1,9 @@
 <script setup lang="ts">
-import { useThemeStore } from '@/utils/themes';
+import { togglePreset, toggleThemeMode } from '@/utils/themes';
 import { RouterView } from 'vue-router';
-const themeStore = useThemeStore();
 
-let darkMode = false;
-let colorMode = 'indigo';
-
-themeStore.toggleTheme(darkMode, colorMode);
+toggleThemeMode('light');
+togglePreset('indigo');
 </script>
 
 <template>

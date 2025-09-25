@@ -4,14 +4,13 @@ import router from './router';
 
 import { createPinia } from 'pinia';
 
-import Aura from '@primevue/themes/aura';
+import Aura from '@primeuix/themes/aura';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import DialogService from 'primevue/dialogservice';
 import ToastService from 'primevue/toastservice';
 
 import '@/assets/styles.scss';
-import '@/assets/tailwind.css';
 
 const app = createApp(App);
 
