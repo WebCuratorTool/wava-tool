@@ -124,8 +124,9 @@ onMounted(() => {
                 <span class="text-3xl">Indexing: {{ progressValue }}%</span>
             </div>
             <div v-else ref="inspectArea" class="row-container">
-                <div v-if="!visLocation" class="flex items-center justify-center w-full h-full">
-                    <span class="text-3xl">No harvest selected!</span>
+                <div v-if="!visLocation" class="flex flex-col items-center justify-center gap-8 w-full h-full">
+                    <span class="text-5xl">WAVA: Web Archive Visualization and Analysis Tool</span>
+                    <span class="text-3xl">Please select a harvest to start!</span>
                 </div>
                 <div v-if="visLocation" class="flex items-center justify-end w-full gap-4 topbar">
                     <div class="text-white">
