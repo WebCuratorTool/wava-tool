@@ -1,0 +1,18 @@
+#!/bin/bash
+
+CMD=$1
+case $CMD in
+  build)
+    rm -rf ./ui/dist ./src/main/resources/static/
+    cd ui/ && npm install && npm run build-only && cd ../
+    ./gradlew clean build -x test
+    ;;
+  run)
+    ./gradlew clean bootRun -x test
+    ;;
+  bootRun)
+    rm -rf ./ui/dist ./src/main/resources/static/
+    cd ui/ && npm install && npm run build-only && cd ../
+    ./gradlew clean bootRun -x test
+    ;;
+esac
